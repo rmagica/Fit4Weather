@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>WearWise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c1520;
+    --bg-card:   #131e2d;
+    --bg-card2:  #192538;
+    --accent:    #5bc4f5;
+    --warm:      #f5a623;
+    --green:     #6ee7a0;
+    --red:       #ff6b6b;
+    --rain:      #5b9bd5;
+    --wind:      #a8dadc;
+    --text:      #e6f2fb;
+    --muted:     #7a9bb5;
+    --dim:       #3e5870;
+    --border:    #1b2f44;
+    --selected:  #1a3d5c;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .app { max-width: 430px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 80px; }
+
+  /* ── NAV TABS ── */
+  .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px;
+    background: #080f18; border-top: 1px solid var(--border); display: flex; z-index: 100; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 12px 0 14px; background: none; border: none; color: var(--dim); cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase; transition: color .2s; }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 22px; height: 22px; stroke-width: 1.8; }
+
+  /* ── SCREEN SWITCHING ── */
+  .screen { display: none; padding: 16px; animation: fadeUp .3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+
+  /* ── CARDS ── */
+  .card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); padding: 18px; margin-bottom: 14px; }
+  .card-alt { background: var(--bg-card2); }
+
+  /* ── WEATHER HERO CARD ── */
+  .weather-hero { background: linear-gradient(135deg, #0f2a48 0%, #153762 100%);
+    border-radius: 22px; padding: 22px; margin-bottom: 14px; border: 1px solid #1f3d5c;
+    position: relative; overflow: hidden; }
+  .weather-hero::before { content:''; position:absolute; top:-40px; right:-40px;
+    width:180px; height:180px; background: radial-gradient(circle, rgba(91,196,245,.08) 0%, transparent 70%);
+    border-radius:50%; pointer-events:none; }
+  .hero-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-left {}
+  .hero-datetime { color: var(--dim); font-size: 11px; font-weight: 600; letter-spacing: .4px;
+    margin-bottom: 5px; }
+  .city-name { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .5px; margin-bottom: 4px; }
+  .big-temp { font-family: 'DM Serif Display', serif; font-size: 72px; line-height: 1; color: var(--text); letter-spacing: -3px; }
+  .big-temp sup { font-size: 28px; vertical-align: super; letter-spacing: 0; }
+  .weather-desc { color: var(--text); font-size: 14px; text-transform: capitalize; margin-top: 4px; opacity: .85; }
+  .feels-like { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .weather-emoji { font-size: 64px; line-height: 1; }
+  .unit-toggle { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,.35);
+    border-radius: 20px; padding: 5px 12px; cursor: pointer; user-select: none; }
+  .unit-opt { font-size: 12px; font-weight: 700; color: var(--dim); transition: color .2s; }
+  .unit-opt.active { color: var(--accent); }
+  .unit-sep { color: var(--dim); font-size: 11px; }
+  .stats-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .stat-badge { display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: rgba(0,0,0,.22); border-radius: 10px; padding: 8px 12px; min-width: 64px; }
+  .stat-badge-btn { cursor: pointer; border: 1px solid var(--border); transition: background .15s; }
+  .stat-badge-btn:hover { background: rgba(255,255,255,.08); }
+
+  /* Temperature range */
+  .temp-range { color: var(--muted); font-size: 13px; font-weight: 500; margin-top: 2px;
+    letter-spacing: 0; }
+  .temp-range .lo { color: #7ab3d4; }
+  .temp-range .hi { color: #f5c077; }
+  .stat-icon { font-size: 14px; }
+  .stat-val { color: var(--text); font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .stat-lbl { color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .rain-badge { color: var(--rain) !important; }
+
+  /* ── SECTION LABEL ── */
+  .section-lbl { color: var(--dim); font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 10px; }
+
+  /* ── MODE TOGGLE ── */
+  .mode-bar { display: flex; background: var(--bg-card); border-radius: 14px; padding: 4px; margin-bottom: 14px; border: 1px solid var(--border); }
+  .mode-btn { flex: 1; padding: 9px; text-align: center; border-radius: 10px; background: none; border: none;
+    color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .2s; }
+  .mode-btn.active { background: var(--selected); color: var(--accent); }
+
+  /* ── PERIOD GRID ── */
+  .periods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .period-card { border-radius: 16px; padding: 14px; border: 1.5px solid var(--border);
+    cursor: pointer; position: relative; transition: all .2s; background: var(--bg-card); }
+  .period-card.active { border-color: var(--warm); }
+  .period-card.morning.active  { background: linear-gradient(135deg,#1a3a5c,#2d6a9f); }
+  .period-card.afternoon.active { background: linear-gradient(135deg,#7a4a00,#c87d00); }
+  .period-card.evening.active  { background: linear-gradient(135deg,#3a1a5c,#7a3d9f); }
+  .period-card.night.active    { background: linear-gradient(135deg,#0a1020,#1a2840); border-color: var(--accent); }
+  .period-emoji { font-size: 26px; margin-bottom: 6px; }
+  .period-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .period-name { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .period-card.active .period-name { color: #fff; }
+  .period-hours { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .period-card.active .period-hours { color: rgba(255,255,255,.65); }
+  .period-temp-range { text-align: right; line-height: 1.2; }
+  .period-temp-lo { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: #7ab3d4; display: block; letter-spacing: -1px; }
+  .period-temp-hi { font-size: 13px; font-weight: 700; color: #f5c077; display: block; margin-top: 2px; }
+  .check-dot { display: none !important; }
+
+  /* ── SLIDER CARD ── */
+  .slider-card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); padding: 18px; margin-bottom: 14px; }
+  .slider-display { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .slider-badge { text-align: center; }
+  .slider-badge-lbl { color: var(--dim); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; }
+  .slider-badge-val { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); margin-top: 2px; }
+  .slider-arrow { color: var(--dim); font-size: 18px; }
+  .slider-sub { color: var(--dim); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; margin-top: 10px; }
+  .range-wrap { position: relative; height: 36px; display: flex; align-items: center; }
+  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer; background: var(--border); }
+  input[type=range].start-slider { accent-color: var(--accent); }
+  input[type=range].start-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 0 3px rgba(91,196,245,.2); }
+  input[type=range].end-slider { accent-color: var(--warm); }
+  input[type=range].end-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--warm); box-shadow: 0 0 0 3px rgba(245,166,35,.2); }
+  .slider-ticks { display: flex; justify-content: space-between; margin-top: 6px; }
+  .slider-tick { color: var(--dim); font-size: 10px; }
+
+  /* ── AGG CARD ── */
+  .agg-card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); padding: 18px; margin-bottom: 14px; }
+  .agg-row { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .agg-stat { text-align: center; }
+  .agg-stat-emoji { font-size: 20px; }
+  .agg-stat-val { color: var(--text); font-size: 14px; font-weight: 700; margin-top: 4px; }
+  .agg-stat-lbl { color: var(--muted); font-size: 10px; margin-top: 2px; }
+  .agg-range-val { font-size: 13px !important; }
+  .agg-lo  { color: #7ab3d4; font-weight: 700; }
+  .agg-hi  { color: #f5c077; font-weight: 700; }
+  .agg-sep { color: var(--dim); }
+  .level-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .level-badge { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; border: 1px solid; font-size: 11px; font-weight: 700; }
+  .level-badge.rain { border-color: rgba(91,155,213,.5); background: rgba(91,155,213,.12); color: var(--rain); }
+  .level-badge.wind { border-color: rgba(168,218,220,.5); background: rgba(168,218,220,.12); color: var(--wind); }
+
+  /* ── TIP CARDS ── */
+  .tip-card { display: flex; gap: 14px; background: linear-gradient(135deg,#131e2d,#192538);
+    border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid var(--border);
+    animation: fadeUp .25s ease both; }
+  .tip-emoji { font-size: 32px; flex-shrink: 0; display:flex; align-items:center; }
+  .tip-emoji .custom-icon { color: var(--text); }
+  .tip-row-emoji .custom-icon { color: var(--text); }
+  .tip-body { flex: 1; }
+  .tip-label { color: var(--text); font-size: 14px; font-weight: 700; }
+  .tip-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .tip-chevron { color: var(--dim); font-size: 11px; transition: transform .2s; flex-shrink: 0; }
+  .tip-card.expanded .tip-chevron { transform: rotate(180deg); }
+  .tip-text { color: var(--muted); font-size: 13px; line-height: 1.5;
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .25s ease, opacity .2s ease, margin-top .2s ease;
+    margin-top: 0; }
+  .tip-card.expanded .tip-text { max-height: 200px; opacity: 1; margin-top: 6px; }
+  .tip-cat { display: inline-block; background: var(--selected); color: var(--accent);
+    font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 5px; margin-top: 8px; }
+  .no-tips { background: var(--bg-card); border-radius: 16px; padding: 28px; text-align: center;
+    border: 1px solid var(--border); margin-bottom: 10px; }
+  .no-tips-emoji { font-size: 40px; margin-bottom: 10px; }
+  .no-tips-text { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* ── ADMIN SCREEN ── */
+  .admin-header { background: linear-gradient(135deg,#0f2744,#0c1520); padding: 20px 16px 16px; margin: -16px -16px 16px; }
+  .admin-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); }
+  .admin-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .filter-pills { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 4px; margin-bottom: 14px; }
+  .pill { padding: 5px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    transition: all .2s; }
+  .pill.active { background: var(--selected); border-color: var(--accent); color: var(--accent); }
+
+  /* tip list row */
+  .tip-row { background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
+  .tip-row-main { display: flex; align-items: center; padding: 12px 14px; gap: 12px; cursor: pointer; }
+  .tip-row-emoji { font-size: 26px; flex-shrink: 0; }
+  .tip-row-info { flex: 1; }
+  .tip-row-label { font-size: 14px; font-weight: 600; color: var(--text); }
+  .tip-row-tags { display: flex; gap: 6px; margin-top: 4px; }
+  .tag { padding: 2px 7px; border-radius: 5px; font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+  .tag-cat { background: rgba(91,196,245,.15); color: var(--accent); }
+  .tag-pri { background: rgba(245,166,35,.15); color: var(--warm); }
+  .tip-row-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(255,255,255,.05);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+  .icon-btn:hover { background: rgba(255,255,255,.1); }
+  .icon-btn svg { width: 15px; height: 15px; }
+  .tip-row-expanded { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .exp-sug { color: var(--muted); font-size: 12px; margin-bottom: 8px; padding-top: 10px; line-height: 1.5; }
+  .cond-header { color: var(--dim); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 5px; }
+  .cond-line { color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+
+  .fab { position: fixed; bottom: 90px; right: calc(50% - 215px + 16px); width: 56px; height: 56px;
+    border-radius: 50%; background: linear-gradient(135deg,#1e6fa8,#5bc4f5); border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(91,196,245,.35); z-index: 50; transition: transform .15s; }
+  .fab:hover { transform: scale(1.08); }
+  .fab svg { width: 24px; height: 24px; stroke: white; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 200;
+    display: none; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #0e1a27; border-radius: 24px 24px 0 0; width: 100%; max-width: 430px;
+    max-height: 90vh; display: flex; flex-direction: column; border: 1px solid var(--border);
+    border-bottom: none; animation: slideUp .3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-header { display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); }
+  .modal-cancel { color: var(--muted); font-size: 14px; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .modal-save { color: var(--accent); font-size: 14px; font-weight: 700; background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .modal-body { overflow-y: auto; padding: 20px; flex: 1; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-section { margin-bottom: 22px; }
+  .form-label { color: var(--dim); font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 10px; display: block; }
+  .input { width: 100%; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 10px 12px;
+    outline: none; transition: border-color .2s; margin-bottom: 8px; }
+  .input:focus { border-color: var(--accent); }
+  .textarea { resize: vertical; height: 72px; }
+  .emoji-row { display: flex; gap: 8px; }
+  .emoji-input { width: 52px; text-align: center; font-size: 24px; flex-shrink: 0; }
+
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip { padding: 7px 14px; border-radius: 20px; background: var(--bg-card); border: 1.5px solid var(--border);
+    color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .chip.active { background: var(--selected); border-color: var(--accent); color: var(--accent); }
+  .chip.pri-active { background: var(--warm); border-color: var(--warm); color: #000; }
+
+  /* Level selector rows */
+  .level-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+    background: var(--bg-card); border: 1.5px solid var(--border); cursor: pointer; margin-bottom: 7px; transition: all .15s; }
+  .level-row.active { border-color: var(--accent); background: var(--selected); }
+  .level-row.rain-active { border-color: var(--rain); background: rgba(91,155,213,.15); }
+  .level-row.wind-active { border-color: var(--wind); background: rgba(168,218,220,.1); }
+  .level-row-emoji { font-size: 20px; }
+  .level-row-info { flex: 1; }
+  .level-row-name { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .level-row.active .level-row-name, .level-row.rain-active .level-row-name, .level-row.wind-active .level-row-name { color: var(--text); }
+  .level-row-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .level-check { color: var(--accent); font-size: 16px; display: none; }
+  .level-row.active .level-check, .level-row.rain-active .level-check, .level-row.wind-active .level-check { display: block; }
+
+  /* Temp condition */
+  .cond-toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .cond-toggle-lbl { font-size: 14px; color: var(--text); }
+  .toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 12px; cursor: pointer; transition: .2s; }
+  .toggle-slider::before { content:''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+    background: var(--muted); border-radius: 50%; transition: .2s; }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: #fff; }
+  .cond-body { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 6px; }
+  .op-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px;
+    border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; margin-bottom: 6px; transition: all .15s; }
+  .op-row.active { border-color: var(--accent); background: var(--selected); }
+  .op-row-text { font-size: 13px; color: var(--muted); }
+  .op-row.active .op-row-text { color: var(--accent); font-weight: 700; }
+  .op-check { display: none; color: var(--accent); font-size: 14px; }
+  .op-row.active .op-check { display: block; }
+  .input-row { display: flex; gap: 8px; }
+  .input-col { flex: 1; }
+  .input-col label { color: var(--muted); font-size: 11px; display: block; margin-bottom: 4px; }
+  .hint { color: var(--dim); font-size: 11px; margin-bottom: 10px; }
+  .clear-btn { background: none; border: none; color: var(--red); font-size: 11px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; padding: 4px 0; margin-top: 4px; }
+
+  .reset-row { display: flex; justify-content: center; padding: 16px 0; }
+  .reset-btn { background: none; border: none; color: var(--red); font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 6px; }
+
+  /* ── CUSTOM SVG ICONS ── */
+  .custom-icon { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .custom-icon svg { width:100%; height:100%; }
+
+  /* ── EMOJI PICKER ── */
+  .emoji-pick-btn { width: 56px; height: 46px; border-radius: 10px; background: var(--bg-card);
+    border: 1.5px solid var(--border); cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 3px; flex-shrink: 0; transition: border-color .2s; }
+  .emoji-pick-btn:hover, .emoji-pick-btn.open { border-color: var(--accent); }
+  .emoji-pick-btn span:first-child { font-size: 24px; line-height: 1; }
+  .emoji-pick-caret { color: var(--dim); font-size: 10px; }
+
+  #emoji-picker { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+    margin: 8px 0 10px; overflow: hidden; }
+  .epicker-tabs { display: flex; flex-wrap: wrap; padding: 8px 10px 0; gap: 4px;
+    border-bottom: 1px solid var(--border); }
+  .epicker-tab { padding: 6px 12px 8px; border-radius: 8px 8px 0 0; background: none; border: none;
+    color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .5px; cursor: pointer;
+    white-space: nowrap; transition: all .15s; font-family: "DM Sans", sans-serif; }
+  .epicker-tab.active { color: var(--accent); background: var(--selected); }
+  .epicker-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px;
+    padding: 10px; max-height: 200px; overflow-y: auto; }
+  .epicker-grid::-webkit-scrollbar { width: 3px; }
+  .epicker-grid::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+  .epicker-em { font-size: 24px; width: 100%; aspect-ratio: 1; display: flex; align-items: center;
+    justify-content: center; border-radius: 8px; cursor: pointer; transition: background .1s;
+    border: 2px solid transparent; }
+  .epicker-custom { color: var(--text); }
+  .epicker-custom svg { width: 22px; height: 22px; }
+  .epicker-em:hover { background: var(--bg-card2); }
+  .epicker-em.selected { border-color: var(--accent); background: var(--selected); }
+
+  /* ── GROUP HEADER ── */
+  .group-header { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 6px 4px 4px; margin-top: 4px; }
+  .tip-card-acc { margin-left: 10px; border-left: 2px solid var(--dim); }
+
+  /* ── DATE NAV ── */
+  .date-nav { display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px; }
+  .date-arrow { background:rgba(255,255,255,.08); border:1px solid var(--border); color:var(--text);
+    width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center; transition:background .15s; line-height:1; }
+  .date-arrow:hover { background:rgba(255,255,255,.15); }
+  .date-label { color:var(--text); font-size:13px; font-weight:700; letter-spacing:.5px;
+    min-width:130px; text-align:center; }
+
+  /* ── CITY SEARCH ── */
+  .city-name { cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+    padding:2px 6px 2px 0; border-radius:6px; transition:background .15s; }
+  .city-name:hover { background:rgba(255,255,255,.08); }
+  .city-edit-icon { color:var(--dim); font-size:12px; }
+  .city-overlay { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:300;
+    display:none; align-items:flex-start; justify-content:center; padding-top:80px; }
+  .city-overlay.open { display:flex; animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .city-box { background:#0e1a27; border-radius:18px; border:1px solid var(--border);
+    width:calc(100% - 32px); max-width:398px; overflow:hidden; }
+  .city-box-header { display:flex; justify-content:space-between; align-items:center;
+    padding:14px 16px 10px; border-bottom:1px solid var(--border); }
+  .city-box-title { color:var(--text); font-weight:700; font-size:15px; }
+  .city-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; }
+  .city-input { margin:10px 12px; width:calc(100% - 24px); }
+  #city-results { max-height:220px; overflow-y:auto; }
+  .city-result { padding:11px 16px; cursor:pointer; color:var(--text); font-size:14px;
+    border-top:1px solid var(--border); transition:background .1s; display:flex; align-items:center; gap:8px; }
+  .city-result:first-child { border-top:none; }
+  .city-result:hover { background:var(--bg-card2); }
+  .city-result-flag { font-size:18px; }
+  .city-result-info { flex:1; }
+  .city-result-name { font-weight:600; }
+  .city-result-sub { color:var(--muted); font-size:11px; margin-top:1px; }
+  .city-searching { padding:14px 16px; color:var(--muted); font-size:13px; text-align:center; }
+
+  /* ── WEATHER CALENDAR ── */
+  .cal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:300;
+    display:none; align-items:center; justify-content:center; }
+  .cal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+  .cal-modal { background:#0e1a27; border-radius:20px; border:1px solid var(--border);
+    width:calc(100% - 32px); max-width:398px; overflow:hidden; animation:slideUp .25s ease; }
+  .cal-header { display:flex; align-items:center; padding:14px 16px; border-bottom:1px solid var(--border); gap:8px; }
+  .cal-nav { background:rgba(255,255,255,.07); border:1px solid var(--border); color:var(--text);
+    width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; transition:background .15s; }
+  .cal-nav:hover { background:rgba(255,255,255,.15); }
+  .cal-month-label { flex:1; text-align:center; color:var(--text); font-family:"DM Serif Display",serif;
+    font-size:18px; }
+  .cal-close { background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer;
+    margin-left:4px; }
+  .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); padding:8px 10px 4px;
+    border-bottom:1px solid var(--border); }
+  .cal-weekdays span { text-align:center; color:var(--dim); font-size:10px; font-weight:700;
+    letter-spacing:.8px; text-transform:uppercase; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; padding:8px 10px 10px; }
+  .cal-cell { min-height:62px; aspect-ratio:unset; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; border-radius:10px; cursor:pointer; transition:background .15s;
+    gap:1px; }
+  .cal-cell:hover { background:var(--bg-card2); }
+  .cal-cell.today { background:var(--selected); border:1.5px solid var(--accent); }
+  .cal-cell.selected { background:var(--selected); border:1.5px solid var(--warm); }
+  .cal-cell.empty { cursor:default; }
+  .cal-cell.other-month { opacity:.3; }
+  .cal-cell-icon { font-size:18px; line-height:1; }
+  .cal-cell-day { color:var(--muted); font-size:9px; font-weight:700; }
+  .cal-noon { color:var(--text); font-size:11px; font-weight:700; line-height:1; }
+  .cal-range { display:flex; gap:3px; font-size:8px; font-weight:600; line-height:1; }
+  .cal-range .lo { color:#7ab3d4; }
+  .cal-range .hi { color:#f5c077; }
+  .cal-cell.today .cal-cell-day { color:var(--accent); }
+  .cal-cell.selected .cal-cell-day { color:var(--warm); }
+  .cal-legend { display:flex; flex-wrap:wrap; gap:10px; padding:10px 14px 14px;
+    border-top:1px solid var(--border); }
+  .cal-legend span { color:var(--muted); font-size:11px; }
+
+  /* ── WEATHER SPINNER ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .weather-spinner { width:28px; height:28px; border:3px solid rgba(91,196,245,.2);
+    border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ HOME SCREEN ══ -->
+  <div class="screen active" id="screen-home">
+
+    <!-- Weather Hero -->
+    <div class="weather-hero" id="weather-hero-card">
+      <!-- Date nav row -->
+      <div class="date-nav">
+        <button class="date-arrow" onclick="shiftDay(-1)">‹</button>
+        <div class="date-label" id="date-label">Today</div>
+        <button class="date-arrow" onclick="shiftDay(1)">›</button>
+      </div>
+      <div class="hero-row">
+        <div class="hero-left">
+          <div class="hero-datetime" id="hero-datetime">Mon, Mar 8 · 2:34 PM</div>
+          <div class="city-name" id="city-name" onclick="openCitySearch()" title="Tap to change city">
+            <span id="city-text">Vancouver, CA</span>
+            <span class="city-edit-icon">✎</span>
+          </div>
+          <div class="big-temp" id="big-temp">14<sup id="big-unit">°C</sup></div>
+          <div class="temp-range" id="temp-range"><span class="lo">↓8°</span> <span class="hi">↑16°</span></div>
+          <div class="weather-desc" id="weather-desc">partly cloudy</div>
+          <div class="feels-like" id="feels-like">Feels like 11°C</div>
+        </div>
+        <div class="hero-right">
+          <div class="weather-emoji" id="weather-emoji">⛅</div>
+          <div class="unit-toggle" onclick="toggleUnit()">
+            <span class="unit-opt active" id="unit-c">°C</span>
+            <span class="unit-sep">|</span>
+            <span class="unit-opt" id="unit-f">°F</span>
+          </div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-badge"><span class="stat-icon">🌧️</span><span class="stat-val" id="rain-prob-val">0%</span><span class="stat-lbl">Rain Chance</span></div>
+        <div class="stat-badge"><span class="stat-icon">💧</span><span class="stat-val" id="humidity-val">72%</span><span class="stat-lbl">Humidity</span></div>
+        <div class="stat-badge"><span class="stat-icon">💨</span><span class="stat-val" id="wind-val">34 km/h</span><span class="stat-lbl" id="wind-lbl">Moderate Wind</span></div>
+        <div class="stat-badge"><span class="stat-icon">☀️</span><span class="stat-val" id="uv-val">3</span><span class="stat-lbl">UV Index</span></div>
+        <div class="stat-badge stat-badge-btn" onclick="openCalendar()"><span class="stat-icon">📅</span><span class="stat-val">—</span><span class="stat-lbl">Calendar</span></div>
+      </div>
+    </div>
+
+    <!-- Weather Loading Overlay -->
+    <div id="weather-loading" style="display:none;position:absolute;inset:0;background:rgba(12,21,32,.7);border-radius:22px;align-items:center;justify-content:center;z-index:10;flex-direction:column;gap:8px;">
+      <div class="weather-spinner"></div>
+      <div style="color:var(--muted);font-size:12px;letter-spacing:.5px;">Loading weather…</div>
+    </div>
+    <div id="weather-error" style="display:none;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);border-radius:10px;padding:7px 12px;font-size:11px;color:#ff9a9a;margin-bottom:10px;text-align:center;"></div>
+
+    <!-- City Search Overlay -->
+    <div class="city-overlay" id="city-overlay">
+      <div class="city-box">
+        <div class="city-box-header">
+          <span class="city-box-title">Change City</span>
+          <button class="city-close" onclick="closeCitySearch()">✕</button>
+        </div>
+        <input class="input city-input" id="city-input" placeholder="e.g. Tokyo, London, New York…" autocomplete="off" oninput="onCityInput()" onkeydown="onCityKey(event)">
+        <div id="city-results"></div>
+      </div>
+    </div>
+
+    <!-- Weather Calendar Modal -->
+    <div class="cal-overlay" id="cal-overlay" onclick="calOverlayClick(event)">
+      <div class="cal-modal" id="cal-modal">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="shiftCalMonth(-1)">‹</button>
+          <span class="cal-month-label" id="cal-month-label">March 2026</span>
+          <button class="cal-nav" onclick="shiftCalMonth(1)">›</button>
+          <button class="cal-close" onclick="closeCalendar()">✕</button>
+        </div>
+        <div class="cal-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <span>☀️ Sunny</span><span>⛅ Partly cloudy</span><span>🌧️ Rain</span><span>❄️ Snow</span><span>⛈️ Storm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Toggle -->
+    <div class="mode-bar">
+      <button class="mode-btn active" onclick="setMode('periods', this)">Time Periods</button>
+      <button class="mode-btn" onclick="setMode('slider', this)">Custom Range</button>
+    </div>
+
+    <!-- Period Picker -->
+    <div id="period-panel">
+      <div class="section-lbl">SELECT YOUR TIME OUT</div>
+      <div class="periods-grid" id="periods-grid"></div>
+    </div>
+
+    <!-- Slider Panel -->
+    <div id="slider-panel" style="display:none">
+      <div class="slider-card">
+        <div class="section-lbl">DRAG TO SET YOUR TIME RANGE</div>
+        <div class="slider-display">
+          <div class="slider-badge">
+            <div class="slider-badge-lbl">LEAVING</div>
+            <div class="slider-badge-val" id="slider-start-lbl">8 AM</div>
+          </div>
+          <div class="slider-arrow">→</div>
+          <div class="slider-badge">
+            <div class="slider-badge-lbl">BACK BY</div>
+            <div class="slider-badge-val" id="slider-end-lbl">6 PM</div>
+          </div>
+        </div>
+        <div class="slider-sub">Start Time</div>
+        <div class="range-wrap">
+          <input type="range" class="start-slider" id="start-slider" min="0" max="23" value="8" oninput="updateSlider()">
+        </div>
+        <div class="slider-sub">End Time</div>
+        <div class="range-wrap">
+          <input type="range" class="end-slider" id="end-slider" min="1" max="24" value="18" oninput="updateSlider()">
+        </div>
+        <div class="slider-ticks">
+          <span class="slider-tick">12 AM</span>
+          <span class="slider-tick">6 AM</span>
+          <span class="slider-tick">12 PM</span>
+          <span class="slider-tick">6 PM</span>
+          <span class="slider-tick">12 AM</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aggregated Conditions -->
+    <div class="agg-card" id="agg-card">
+      <div class="section-lbl">CONDITIONS FOR YOUR OUTING</div>
+      <div class="agg-row" id="agg-row"></div>
+      <div class="level-badges" id="level-badges"></div>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="section-lbl" id="suggestions-lbl">WHAT TO WEAR</div>
+    <div id="suggestions-list"></div>
+  </div>
+
+  <!-- ══ ADMIN SCREEN ══ -->
+  <div class="screen" id="screen-admin">
+    <div class="admin-header">
+      <div class="admin-title">Tips Manager</div>
+      <div class="admin-sub" id="admin-sub">25 tips configured</div>
+    </div>
+    <div class="filter-pills" id="filter-pills"></div>
+    <div id="tips-list"></div>
+    <div class="reset-row">
+      <button class="reset-btn" onclick="resetTips()">↺ Reset to Defaults</button>
+    </div>
+    <div style="height:20px"></div>
+  </div>
+
+  <!-- FAB (admin screen only) -->
+  <button class="fab" id="fab" onclick="openModal(null)" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Today
+    </button>
+    <button class="nav-btn" id="nav-admin" onclick="showScreen('admin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Manage Tips
+    </button>
+  </nav>
+</div>
+
+<!-- ══ ADD/EDIT MODAL ══ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <div class="modal-title" id="modal-title">New Tip</div>
+      <button class="modal-save" onclick="saveTip()">Save</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Details -->
+      <div class="form-section">
+        <label class="form-label">Details</label>
+        <div class="emoji-row">
+          <button type="button" class="emoji-pick-btn" id="emoji-pick-btn" onclick="toggleEmojiPicker()">
+            <span id="emoji-preview">👕</span>
+            <span class="emoji-pick-caret">▾</span>
+          </button>
+          <input class="input" id="f-label" placeholder="Tip title (e.g. 'Warm Jacket')" style="flex:1">
+        </div>
+        <div id="emoji-picker" style="display:none">
+          <div class="epicker-tabs" id="epicker-tabs"></div>
+          <div class="epicker-grid" id="epicker-grid"></div>
+        </div>
+        <textarea class="input textarea" id="f-suggestion" placeholder="Suggestion shown to the user…"></textarea>
+      </div>
+
+      <!-- Category -->
+      <div class="form-section">
+        <label class="form-label">Category</label>
+        <div class="chips" id="cat-chips"></div>
+      </div>
+
+      <!-- Priority -->
+      <div class="form-section">
+        <label class="form-label">Priority (1 low → 10 high)</label>
+        <div class="chips" id="pri-chips"></div>
+      </div>
+
+      <!-- Rain Level -->
+      <div class="form-section">
+        <label class="form-label">🌧️ Rain — show when rain is at least…</label>
+        <div class="hint">Leave unset to ignore rain entirely.</div>
+        <div id="rain-levels"></div>
+        <button class="clear-btn" id="rain-clear" onclick="clearRain()" style="display:none">✕ Clear rain condition</button>
+      </div>
+
+      <!-- Wind Level -->
+      <div class="form-section">
+        <label class="form-label">💨 Wind — show when wind is at least…</label>
+        <div class="hint">Leave unset to ignore wind entirely.</div>
+        <div id="wind-levels"></div>
+        <button class="clear-btn" id="wind-clear" onclick="clearWind()" style="display:none">✕ Clear wind condition</button>
+      </div>
+
+      <!-- Temperature -->
+      <div class="form-section">
+        <label class="form-label">🌡️ Temperature <span id="temp-unit-lbl">(°C)</span></label>
+        <div class="cond-toggle-row">
+          <span class="cond-toggle-lbl">Enable temperature condition</span>
+          <label class="toggle"><input type="checkbox" id="temp-enabled" onchange="toggleTempCond()"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="cond-body" id="temp-cond-body" style="display:none">
+          <div class="hint">Condition type:</div>
+          <div id="op-rows"></div>
+          <div id="temp-inputs" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- Humidity -->
+      <div class="form-section">
+        <label class="form-label">💧 Humidity (%)</label>
+        <div class="cond-toggle-row">
+          <span class="cond-toggle-lbl">Enable humidity condition</span>
+          <label class="toggle"><input type="checkbox" id="hum-enabled" onchange="toggleHumCond()"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="cond-body" id="hum-cond-body" style="display:none">
+          <div class="hint">Show tip when humidity is at least:</div>
+          <input class="input" id="hum-val" type="number" placeholder="e.g. 70" min="0" max="100">
+        </div>
+      </div>
+
+      <!-- Rain Probability -->
+      <div class="form-section">
+        <label class="form-label">🌧️ Chance of Rain (%)</label>
+        <div class="cond-toggle-row">
+          <span class="cond-toggle-lbl">Enable rain chance condition</span>
+          <label class="toggle"><input type="checkbox" id="rainprob-enabled" onchange="toggleRainProbCond()"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="cond-body" id="rainprob-cond-body" style="display:none">
+          <div class="hint">Show tip when chance of rain is at least:</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+            <input type="range" id="rainprob-val" min="0" max="100" step="5" value="40"
+              oninput="document.getElementById('rainprob-display').textContent=this.value+'%'"
+              style="flex:1;accent-color:var(--accent)">
+            <span id="rainprob-display" style="color:var(--text);font-weight:700;min-width:36px">40%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- UV Index -->
+      <div class="form-section">
+        <label class="form-label">☀️ UV Index (0–11)</label>
+        <div class="cond-toggle-row">
+          <span class="cond-toggle-lbl">Enable UV condition</span>
+          <label class="toggle"><input type="checkbox" id="uv-enabled" onchange="toggleUvCond()"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="cond-body" id="uv-cond-body" style="display:none">
+          <div class="hint">Show tip when UV index is at least:</div>
+          <input class="input" id="uv-val" type="number" placeholder="e.g. 6" min="0" max="11">
+        </div>
+      </div>
+
+      <div style="height:30px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// EMOJI PICKER DATA
+// ══════════════════════════════════════════════════════════════════════════════
+
+const EMOJI_CATS = [
+  { label: "Clothing", emojis: ["👕","👖","🧥","🧣","🧤","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","🧳","👒","🎩","🪖","⛑️","👑","💍","👓","🕶️","🥽","🌂","☂️"] },
+  { label: "Weather", emojis: ["☀️","🌤️","⛅","🌥️","☁️","🌦️","🌧️","⛈️","🌩️","🌨️","❄️","🌬️","💨","🌫️","🌊","🌡️","🔥","💧","🌈","⚡","🌙","🌟","⭐","🌞","🌝"] },
+  { label: "Footwear", emojis: ["👞","👟","🥾","🥿","👠","👡","👢","🩴","🩰"] },
+  { label: "Accessories", emojis: ["💄","💅","💍","💎","👑","🎀","🪆","🧴","🪥","🧼","🪒","🧹","🪣","🧺","🪤","🛍️","🎁","🧲","🔑","🗝️","🔐","🔒","🔓"] },
+  { label: "Activities", emojis: ["🏃","🚶","🧘","🏊","🏋️","🚴","⛷️","🏂","🤸","🧗","🚵","🏇","⛹️","🤾","🏌️","🤺","🥊","🎿","🛷","🏄","🤽","🚣","🧜"] },
+  { label: "Symbols", emojis: ["✅","❌","⚠️","💡","📌","📍","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🔶","🔷","🔸","🔹","🔺","🔻","💠","🔘","🔲","🔳","▪️","▫️","◾","◽"] },
+  { label: "Nature", emojis: ["🌿","🍃","🍂","🍁","🌸","🌺","🌻","🌹","🌷","🌵","🌴","🌲","🌳","🍀","☘️","🌾","🌱","🪴","🪸","🐾","🦋","🐝","🌍","🏔️","🗻","🌋","🏜️","🏖️","🏝️"] },
+  { label: "Materials", custom: ["__wool__"], emojis: ["🧶","🪡","🧵","🪢","🫧","🔘","⚪","🟤","🟫","⬜","⬛"] },
+];
+
+
+// ── CUSTOM ICONS (SVG) ───────────────────────────────────────────────────────
+const CUSTOM_ICONS = {
+  "__wool__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="10" r="5"/><circle cx="18" cy="7" r="5"/><circle cx="29" cy="10" r="5"/><circle cx="11" cy="20" r="5"/><circle cx="25" cy="20" r="5"/><path d="M2 14 Q7 24 11 25 Q18 28 25 25 Q29 24 34 14"/></svg>`,
+};
+
+function renderIcon(key, sizePx=32, color='currentColor') {
+  if (!key) return '👕';
+  if (CUSTOM_ICONS[key]) {
+    return `<span class="custom-icon" style="width:${sizePx}px;height:${sizePx}px;color:${color}">${CUSTOM_ICONS[key]}</span>`;
+  }
+  return key; // regular emoji
+}
+
+let currentEmojiCat = 0;
+let selectedEmoji = '👕';
+
+function buildEmojiPicker() {
+  const tabsEl = document.getElementById('epicker-tabs');
+  const gridEl = document.getElementById('epicker-grid');
+
+  tabsEl.innerHTML = EMOJI_CATS.map((c,i) => `
+    <button class="epicker-tab${i===currentEmojiCat?' active':''}" onclick="switchEmojiCat(${i})">${c.label}</button>
+  `).join('');
+
+  const cat = EMOJI_CATS[currentEmojiCat];
+  const customs = (cat.custom||[]).map(key => `
+    <div class="epicker-em epicker-custom${key===selectedEmoji?' selected':''}" onclick="pickEmoji('${key}')" title="wool">
+      ${CUSTOM_ICONS[key]||key}
+    </div>`).join('');
+  const regulars = cat.emojis.map(e => `
+    <div class="epicker-em${e===selectedEmoji?' selected':''}" onclick="pickEmoji('${e}')" title="${e}">${e}</div>
+  `).join('');
+  gridEl.innerHTML = customs + regulars;
+}
+
+function switchEmojiCat(i) {
+  currentEmojiCat = i;
+  buildEmojiPicker();
+}
+
+function pickEmoji(e) {
+  selectedEmoji = e;
+  const prev = document.getElementById('emoji-preview');
+  if (CUSTOM_ICONS[e]) {
+    prev.innerHTML = CUSTOM_ICONS[e];
+    prev.style.fontSize = '';
+  } else {
+    prev.textContent = e;
+  }
+  document.querySelectorAll('.epicker-em').forEach(el => {
+    const isMatch = CUSTOM_ICONS[e]
+      ? el.classList.contains('epicker-custom') && el.onclick && el.getAttribute('onclick')?.includes(e)
+      : el.textContent.trim() === e;
+    el.classList.toggle('selected', isMatch);
+  });
+}
+
+function toggleEmojiPicker() {
+  const picker = document.getElementById('emoji-picker');
+  const btn    = document.getElementById('emoji-pick-btn');
+  const open   = picker.style.display === 'none';
+  picker.style.display = open ? 'block' : 'none';
+  btn.classList.toggle('open', open);
+  if (open) buildEmojiPicker();
+}
+
+function closeEmojiPicker() {
+  document.getElementById('emoji-picker').style.display = 'none';
+  document.getElementById('emoji-pick-btn').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════════════════════
+
+const RAIN_LEVELS = [
+  { key:"drizzle",  label:"Drizzle",       emoji:"🌦️", sub:"0.1–1 mm/h" },
+  { key:"light",    label:"Light Rain",    emoji:"🌧️", sub:"1–4 mm/h" },
+  { key:"moderate", label:"Moderate Rain", emoji:"🌧️", sub:"4–10 mm/h" },
+  { key:"heavy",    label:"Heavy Rain",    emoji:"⛈️", sub:"> 10 mm/h" },
+];
+
+const WIND_LEVELS = [
+  { key:"calm",     label:"Calm",           emoji:"😌", sub:"< 12 km/h" },
+  { key:"light",    label:"Light Breeze",   emoji:"🍃", sub:"12–28 km/h" },
+  { key:"moderate", label:"Moderate Wind",  emoji:"💨", sub:"29–49 km/h" },
+  { key:"strong",   label:"Strong Wind",    emoji:"🌬️", sub:"50–74 km/h" },
+  { key:"storm",    label:"Storm",          emoji:"🌪️", sub:"> 75 km/h" },
+];
+
+const RAIN_ORDER  = ["none","drizzle","light","moderate","heavy"];
+const WIND_ORDER  = ["calm","light","moderate","strong","storm"];
+const CATEGORIES  = ["outerwear","midlayer","top","bottom","base","acc:head","acc:neck","acc:face","acc:foot","acc:hand","footwear","materials","style"];
+const CAT_LABELS  = {
+  "outerwear":"Outerwear","midlayer":"Midlayer","base":"Base Layer",
+  "acc:head":"Head","acc:neck":"Neck","acc:face":"Face",
+  "acc:foot":"Foot Acc.","acc:hand":"Hand / Carry","footwear":"Footwear","materials":"Materials","style":"Style","midlayer":"Midlayer","top":"Top","bottom":"Bottom"
+};
+const FILTER_CATS = ["outerwear","midlayer","top","bottom","base","acc:head","acc:neck","acc:face","acc:foot","acc:hand","footwear","materials","style"];
+// Subcategories that each independently allow one tip
+const ACC_SUBCATS = new Set(["acc:head","acc:neck","acc:face","acc:foot","acc:hand"]);
+
+// ── REAL WEATHER DATA — Open-Meteo (free, no API key) ────────────────────────
+// Fetches 16 days forecast + 14 days history for the selected city.
+// Data is cached in memory; city change triggers a fresh fetch.
+
+const TODAY_IDX = 14; // slot 14 = today in the ALL_DAYS array
+let ALL_DAYS = null;          // populated by fetchWeather()
+let weatherLoading = false;
+let weatherLoadError = false;
+
+// Build a fallback day when data is unavailable
+function makeFallbackDay(h) {
+  return Array.from({length:24}, (_,hr) => ({h:hr,temp:10,hum:70,wind:20,rain:0,uv:2}));
+}
+
+// Convert Open-Meteo hourly arrays into our internal [{h,temp,hum,wind,rain,uv}] per-day format
+// WMO weather code → {description, emoji}
+function wmoToWeather(code) {
+  if (code === 0)               return { desc: 'clear sky',         emoji: '☀️' };
+  if (code === 1)               return { desc: 'mainly clear',       emoji: '🌤️' };
+  if (code === 2)               return { desc: 'partly cloudy',      emoji: '⛅' };
+  if (code === 3)               return { desc: 'overcast',           emoji: '☁️' };
+  if (code <= 49)               return { desc: 'foggy',              emoji: '🌫️' };
+  if (code <= 55)               return { desc: 'drizzle',            emoji: '🌦️' };
+  if (code <= 57)               return { desc: 'freezing drizzle',   emoji: '🌨️' };
+  if (code <= 61)               return { desc: 'light rain',         emoji: '🌧️' };
+  if (code <= 65)               return { desc: 'rain showers',       emoji: '🌧️' };
+  if (code <= 67)               return { desc: 'freezing rain',      emoji: '🌨️' };
+  if (code <= 71)               return { desc: 'light snow',         emoji: '❄️' };
+  if (code <= 77)               return { desc: 'snow',               emoji: '❄️' };
+  if (code <= 82)               return { desc: 'rain showers',       emoji: '🌧️' };
+  if (code <= 86)               return { desc: 'snow showers',       emoji: '🌨️' };
+  if (code === 95)              return { desc: 'thunderstorm',       emoji: '⛈️' };
+  if (code >= 96)               return { desc: 'thunderstorm w/ hail', emoji: '⛈️' };
+  return { desc: 'cloudy', emoji: '⛅' };
+}
+
+function parseOpenMeteo(json) {
+  const h = json.hourly;
+  const times       = h.time;
+  const temps       = h.temperature_2m;
+  const feelsLikes  = h.apparent_temperature || [];
+  const hums        = h.relative_humidity_2m;
+  const winds       = h.wind_speed_10m;
+  const precip      = h.precipitation;
+  const precipProb  = h.precipitation_probability || [];
+  const uvIndex     = h.uv_index || [];
+  const weatherCode = h.weather_code || [];
+
+  const byDay = {};
+  times.forEach((t, i) => {
+    const day  = t.slice(0, 10);
+    const hour = parseInt(t.slice(11, 13));
+    if (!byDay[day]) byDay[day] = [];
+    byDay[day].push({
+      h:         hour,
+      temp:      Math.round(temps[i] ?? 10),
+      feelsLike: Math.round(feelsLikes[i] ?? (temps[i] - 3) ?? 7),
+      hum:       Math.round(hums[i]  ?? 70),
+      wind:      Math.round(winds[i] ?? 0),
+      rain:      parseFloat((precip[i] ?? 0).toFixed(1)),
+      rainProb:  Math.round(precipProb[i] ?? 0),
+      uv:        Math.round(uvIndex[i] ?? 0),
+      wcode:     weatherCode[i] ?? 0,
+    });
+  });
+
+  return Object.keys(byDay).sort().map(d => {
+    const slots = byDay[d];
+    return Array.from({length:24}, (_, hr) =>
+      slots.find(s => s.h === hr) || {h:hr,temp:10,feelsLike:7,hum:70,wind:0,rain:0,rainProb:0,uv:0,wcode:0}
+    );
+  });
+}
+
+// Show/hide loading overlay on the weather card
+function setWeatherLoading(on) {
+  weatherLoading = on;
+  let el = document.getElementById('weather-loading');
+  if (!el) return;
+  el.style.display = on ? 'flex' : 'none';
+}
+
+function setWeatherError(msg) {
+  weatherLoadError = !!msg;
+  let el = document.getElementById('weather-error');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
+async function fetchWeather(lat, lon) {
+  setWeatherLoading(true);
+  setWeatherError(null);
+  ALL_DAYS = null;
+
+  // Open-Meteo: 14 days past + 16 days future = 30-day window
+  const today    = new Date();
+  const pastDate = new Date(today); pastDate.setDate(today.getDate() - TODAY_IDX);
+  const futDate  = new Date(today); futDate.setDate(today.getDate() + (30 - TODAY_IDX - 1));
+
+  const fmt = d => d.toISOString().slice(0,10);
+  const vars = [
+    'temperature_2m',
+    'apparent_temperature',
+    'relative_humidity_2m',
+    'precipitation',
+    'precipitation_probability',
+    'wind_speed_10m',
+    'uv_index',
+    'weather_code',
+  ].join(',');
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+    `&hourly=${vars}` +
+    `&start_date=${fmt(pastDate)}&end_date=${fmt(futDate)}` +
+    `&wind_speed_unit=kmh&timezone=auto`;
+
+  try {
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    ALL_DAYS = parseOpenMeteo(json);
+    setWeatherLoading(false);
+    renderHome();
+    // refresh calendar if open
+    if (document.getElementById('cal-overlay').classList.contains('open')) renderCalendar();
+  } catch(err) {
+    console.error('Open-Meteo fetch failed:', err);
+    setWeatherError('Could not load weather — showing estimated data');
+    // build a simple fallback so the app still works
+    ALL_DAYS = Array.from({length:30}, () => makeFallbackDay());
+    setWeatherLoading(false);
+    renderHome();
+  }
+}
+
+function getDaySlots(dayOffset=0) {
+  if (!ALL_DAYS) return makeFallbackDay();
+  const idx = TODAY_IDX + dayOffset;
+  if (idx < 0 || idx >= ALL_DAYS.length) return ALL_DAYS[Math.min(Math.max(0,idx), ALL_DAYS.length-1)];
+  return ALL_DAYS[idx];
+}
+
+// Returns lat/lon for the current city from CITY_DB, or Vancouver BC as fallback
+function getCityCoords() {
+  const name = currentCity.split(',')[0].trim().toLowerCase();
+  const country = (currentCity.split(',')[1] || '').trim().toLowerCase();
+  // Try exact name + country match first
+  let match = CITY_DB.find(([city, ctry]) =>
+    city.toLowerCase() === name && ctry.toLowerCase().includes(country)
+  );
+  // Fall back to name-only match
+  if (!match) match = CITY_DB.find(([city]) => city.toLowerCase() === name);
+  if (match) return { lat: match[3], lon: match[4] };
+  // default: Vancouver, BC, Canada
+  return { lat: 49.2827, lon: -123.1207 };
+}
+
+const DEFAULT_TIPS = [
+  {id:"t01",label:"Heavy Winter Coat",emoji:"🧥",category:"outerwear",suggestion:"Wear a heavy insulated winter coat — it's freezing out there.",conditions:{temp:{op:"lt",value:2}},priority:10},
+  {id:"t02",label:"Wool Hat",emoji:"🧢",category:"acc:head",suggestion:"Wear a warm wool hat — your head loses heat fast in the cold.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"t02b",label:"Scarf",emoji:"🧣",category:"acc:neck",suggestion:"Wrap a scarf around your neck to keep the chill out.",conditions:{temp:{op:"lt",value:8}},priority:9},
+  {id:"t02c",label:"Gloves",emoji:"🧤",category:"acc:hand",suggestion:"Wear gloves — your hands will feel the cold fast.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"t03",label:"Thermal Underlayer",emoji:"🩲",category:"base",suggestion:"Wear a thermal base layer under your clothes for insulation.",conditions:{temp:{op:"lt",value:5}},priority:8},
+  {id:"t03b",label:"Fleece Midlayer",emoji:"🫧",category:"midlayer",suggestion:"Add a fleece or insulating midlayer between your base and outer shell.",conditions:{temp:{op:"range",min:2,max:12}},priority:8},
+  {id:"t03c",label:"Light Hoodie",emoji:"👘",category:"midlayer",suggestion:"A hoodie or sweatshirt makes a great midlayer for cool weather.",conditions:{temp:{op:"range",min:10,max:18}},priority:5},
+  {id:"t04",label:"Warm Jacket",emoji:"🧥",category:"outerwear",suggestion:"A warm jacket will keep you comfortable today.",conditions:{temp:{op:"range",min:5,max:12}},priority:7},
+  {id:"t05",label:"Long-Sleeve Shirt",emoji:"👕",category:"base",suggestion:"A long-sleeve shirt is the right base layer for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:5},
+  {id:"t06",label:"Light Jacket",emoji:"🧥",category:"outerwear",suggestion:"Bring a light jacket for when the breeze picks up.",conditions:{temp:{op:"range",min:15,max:20}},priority:4},
+  {id:"t07",label:"T-Shirt & Jeans",emoji:"👖",category:"base",suggestion:"A t-shirt and jeans will be just right for today.",conditions:{temp:{op:"range",min:20,max:26}},priority:4},
+  {id:"t08",label:"Breathable Fabrics",emoji:"👗",category:"base",suggestion:"Wear light, breathable fabrics like linen or cotton to stay cool.",conditions:{temp:{op:"gt",value:26}},priority:6},
+  {id:"t09",label:"Shorts & Tank Top",emoji:"🩳",category:"base",suggestion:"Shorts and a tank top — keep it minimal in this heat.",conditions:{temp:{op:"gt",value:30}},priority:7},
+  {id:"t10",label:"Water-Resistant Layer",emoji:"🌦️",category:"outerwear",suggestion:"Just a drizzle — a water-resistant layer or light mac is enough.",conditions:{rain:{op:"gte",level:"drizzle"}},priority:5},
+  {id:"t11",label:"Umbrella",emoji:"☂️",category:"acc:hand",suggestion:"Light rain expected — pop an umbrella in your bag.",conditions:{rain:{op:"gte",level:"light"}},priority:7},
+  {id:"t12",label:"Waterproof Jacket",emoji:"🌧️",category:"outerwear",suggestion:"Moderate rain on the way — wear a proper waterproof jacket.",conditions:{rain:{op:"gte",level:"moderate"}},priority:8},
+  {id:"t13",label:"Waterproof Boots",emoji:"👢",category:"footwear",suggestion:"Moderate rain means puddles — waterproof boots will save you.",conditions:{rain:{op:"gte",level:"moderate"}},priority:7},
+  {id:"t14",label:"Full Rain Gear",emoji:"⛈️",category:"outerwear",suggestion:"Heavy rain incoming — full waterproof gear from head to toe.",conditions:{rain:{op:"gte",level:"heavy"}},priority:10},
+  {id:"t15",label:"Light Windbreaker",emoji:"🍃",category:"outerwear",suggestion:"It's breezy — a light windbreaker will keep you comfortable.",conditions:{wind:{op:"gte",level:"light"}},priority:4},
+  {id:"t16",label:"Windbreaker",emoji:"💨",category:"outerwear",suggestion:"Moderate wind today — a proper windbreaker makes a big difference.",conditions:{wind:{op:"gte",level:"moderate"}},priority:6},
+  {id:"t17",label:"Avoid Loose Clothing",emoji:"🌬️",category:"style",suggestion:"Strong winds — avoid flowy or loose clothing today.",conditions:{wind:{op:"gte",level:"strong"}},priority:7},
+  {id:"t18",label:"Secure Your Hat",emoji:"🧢",category:"acc:head",suggestion:"Strong gusts predicted — skip loose hats or secure them well.",conditions:{wind:{op:"gte",level:"strong"}},priority:6},
+  {id:"t19",label:"Storm Warning",emoji:"🌪️",category:"style",suggestion:"Storm-force winds — if you must go out, wear fitted heavy clothing.",conditions:{wind:{op:"gte",level:"storm"}},priority:10},
+  {id:"t20",label:"Sunglasses",emoji:"🕶️",category:"acc:face",suggestion:"Bring sunglasses — it'll be bright and sunny.",conditions:{uvIndex:{op:"gte",value:4}},priority:5},
+  {id:"t21",label:"Sunscreen SPF 30+",emoji:"☀️",category:"acc:face",suggestion:"Apply SPF 30+ sunscreen — UV index is elevated today.",conditions:{uvIndex:{op:"gte",value:6}},priority:8},
+  {id:"t22",label:"Sun Hat",emoji:"👒",category:"acc:head",suggestion:"A wide-brimmed hat will shield you from strong UV today.",conditions:{uvIndex:{op:"gte",value:8}},priority:7},
+  {id:"t23",label:"Moisture-Wicking Clothes",emoji:"🏃",category:"base",suggestion:"Humidity is high — moisture-wicking fabrics will keep you fresher.",conditions:{humidity:{op:"gte",value:70},temp:{op:"gte",value:22}},priority:5},
+  {id:"t24",label:"Cold Rain Combo",emoji:"🌨️",category:"outerwear",suggestion:"Cold and wet — layer up with waterproof outer layers over warm clothes.",conditions:{temp:{op:"lt",value:10},rain:{op:"gte",level:"light"}},priority:10},
+  {id:"t26",label:"Wear Wool",emoji:"__wool__",category:"materials",suggestion:"Wool regulates body temperature naturally — great for cold or changeable weather. It also stays warm even when damp.",conditions:{temp:{op:"lt",value:12}},priority:7},
+  {id:"t27",label:"Avoid Cotton Base Layer",emoji:"__wool__",category:"materials",suggestion:"Cotton holds moisture and loses insulation when wet. In cold or rainy conditions, swap cotton for wool or synthetics.",conditions:{temp:{op:"lt",value:10},rain:{op:"gte",level:"drizzle"}},priority:8},
+  {id:"t25",label:"Hot & Sunny — Reapply SPF",emoji:"🔥",category:"accessories",suggestion:"Hot AND high UV — reapply sunscreen every 2 hours if outdoors.",conditions:{temp:{op:"gt",value:28},uvIndex:{op:"gte",value:7}},priority:9},
+
+  // ── BOTTOMS ──
+  {id:"b01",label:"Insulated Trousers",emoji:"👖",category:"bottom",suggestion:"Heavy insulated trousers or thick thermal pants — regular jeans won't cut it in this cold.",conditions:{temp:{op:"lt",value:2}},priority:10},
+  {id:"b02",label:"Thermal Leggings Under Pants",emoji:"🩲",category:"bottom",suggestion:"Wear thermal leggings or long johns underneath your trousers for extra warmth.",conditions:{temp:{op:"range",min:2,max:8}},priority:8},
+  {id:"b03",label:"Thick Jeans or Chinos",emoji:"👖",category:"bottom",suggestion:"Thick jeans or chinos are a solid choice — avoid thin or ripped denim today.",conditions:{temp:{op:"range",min:8,max:15}},priority:6},
+  {id:"b04",label:"Regular Jeans or Trousers",emoji:"👖",category:"bottom",suggestion:"Regular jeans or trousers work great for today's temperature.",conditions:{temp:{op:"range",min:15,max:22}},priority:5},
+  {id:"b05",label:"Light Trousers or Chinos",emoji:"👖",category:"bottom",suggestion:"Light trousers, chinos, or a casual skirt will keep you comfortable.",conditions:{temp:{op:"range",min:22,max:28}},priority:5},
+  {id:"b06",label:"Shorts",emoji:"🩳",category:"bottom",suggestion:"Shorts are the move today — keep it light and breezy.",conditions:{temp:{op:"gt",value:28}},priority:7},
+
+  // ── TOPS ──
+  {id:"tp01",label:"Heavy Thermal Top",emoji:"👕",category:"top",suggestion:"A heavy thermal or merino wool top as your base — warmth starts here.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"tp02",label:"Long-Sleeve Thermal Shirt",emoji:"👕",category:"top",suggestion:"A long-sleeve thermal shirt will keep your core warm.",conditions:{temp:{op:"range",min:5,max:12}},priority:8},
+  {id:"tp03",label:"Long-Sleeve Top",emoji:"👕",category:"top",suggestion:"A long-sleeve shirt or light knit top is ideal for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:6},
+  {id:"tp04",label:"T-Shirt",emoji:"👕",category:"top",suggestion:"A regular t-shirt is perfect — not too hot, not too cool.",conditions:{temp:{op:"range",min:18,max:26}},priority:5},
+  {id:"tp05",label:"Light or Sleeveless Top",emoji:"👕",category:"top",suggestion:"Go for a light, breathable, or sleeveless top — it's warm out.",conditions:{temp:{op:"gt",value:26}},priority:6},
+
+  // ── SHOES ──
+  {id:"s01",label:"Insulated Winter Boots",emoji:"🥾",category:"footwear",suggestion:"Insulated waterproof winter boots are essential — keep your feet warm and dry.",conditions:{temp:{op:"lt",value:2}},priority:10},
+  {id:"s02",label:"Warm Ankle Boots",emoji:"👢",category:"footwear",suggestion:"Warm ankle boots or lined boots will protect your feet from the cold.",conditions:{temp:{op:"range",min:2,max:10}},priority:8},
+  {id:"s03",label:"Closed-Toe Shoes or Boots",emoji:"👟",category:"footwear",suggestion:"Closed-toe shoes or casual boots are the right call for this temperature.",conditions:{temp:{op:"range",min:10,max:18}},priority:6},
+  {id:"s04",label:"Trainers or Casual Shoes",emoji:"👟",category:"footwear",suggestion:"Trainers or casual shoes are perfectly comfortable today.",conditions:{temp:{op:"range",min:18,max:26}},priority:5},
+  {id:"s05",label:"Sandals or Light Shoes",emoji:"🩴",category:"footwear",suggestion:"Sandals or very light shoes — your feet will thank you in this heat.",conditions:{temp:{op:"gt",value:26}},priority:6},
+  {id:"s06",label:"Avoid Open-Toe Shoes",emoji:"👟",category:"footwear",suggestion:"Rain on the way — avoid open-toe shoes or sandals unless waterproof.",conditions:{rain:{op:"gte",level:"light"}},priority:6},
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Load saved tips, then merge in any new DEFAULT_TIPS the user doesn't have yet
+let tips = (() => {
+  const saved = JSON.parse(localStorage.getItem('ww_tips') || 'null');
+  if (!saved) return JSON.parse(JSON.stringify(DEFAULT_TIPS));
+  const savedIds = new Set(saved.map(t => t.id));
+  const newDefaults = DEFAULT_TIPS.filter(t => !savedIds.has(t.id));
+  return newDefaults.length ? [...saved, ...newDefaults] : saved;
+})();
+let unit = localStorage.getItem('ww_unit') || 'C';
+let mode = 'periods';
+let selectedPeriods = new Set(['morning']);
+let sliderStart = 8, sliderEnd = 18;
+let filterCat = 'all';
+let editingId = null;
+let formRainLevel = null, formWindLevel = null;
+let formTempOp = 'gt', formPriority = 5, formCategory = 'base';
+
+// Day browsing
+let dayOffset = 0; // 0 = today, -1 = yesterday, +1 = tomorrow etc.
+
+// City search
+let currentCity = localStorage.getItem('ww_city') || 'Vancouver, CA';
+let citySearchTimeout = null;
+
+// Calendar
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-based
+
+const PERIOD_META = [
+  { key:'morning',   emoji:'🌅', label:'Morning',   hours:'6 AM – 12 PM' },
+  { key:'afternoon', emoji:'☀️', label:'Afternoon', hours:'12 PM – 5 PM' },
+  { key:'evening',   emoji:'🌆', label:'Evening',   hours:'5 PM – 9 PM'  },
+  { key:'night',     emoji:'🌙', label:'Night',     hours:'9 PM – 12 AM' },
+];
+
+const PERIOD_HOURS = {
+  morning:   {start:6,  end:12},
+  afternoon: {start:12, end:17},
+  evening:   {start:17, end:21},
+  night:     {start:21, end:24},
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UTILITY
+// ══════════════════════════════════════════════════════════════════════════════
+
+function cToF(c) { return Math.round(c * 9/5 + 32); }
+function fToC(f) { return Math.round((f-32)*5/9); }
+function displayTemp(c) { return unit === 'F' ? cToF(c) : Math.round(c); }
+function unitLabel() { return unit === 'F' ? '°F' : '°C'; }
+function hourLabel(h) {
+  if (h === 0 || h === 24) return '12 AM';
+  if (h === 12) return '12 PM';
+  return h < 12 ? `${h} AM` : `${h-12} PM`;
+}
+function rainLevelMet(actual, required) {
+  return RAIN_ORDER.indexOf(actual) >= RAIN_ORDER.indexOf(required) && RAIN_ORDER.indexOf(actual) > 0;
+}
+function windLevelMet(actual, required) {
+  return WIND_ORDER.indexOf(actual) >= WIND_ORDER.indexOf(required);
+}
+function getRainLevel(mm) {
+  if (!mm || mm <= 0.1) return 'none';
+  if (mm < 1)  return 'drizzle';
+  if (mm < 4)  return 'light';
+  if (mm < 10) return 'moderate';
+  return 'heavy';
+}
+function getWindLevel(kmh) {
+  if (kmh < 12) return 'calm';
+  if (kmh < 29) return 'light';
+  if (kmh < 50) return 'moderate';
+  if (kmh < 75) return 'strong';
+  return 'storm';
+}
+function saveTips() { localStorage.setItem('ww_tips', JSON.stringify(tips)); }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WEATHER / AGGREGATION
+// ══════════════════════════════════════════════════════════════════════════════
+
+function getSlots() {
+  const day = getDaySlots(dayOffset);
+  if (mode === 'slider') {
+    return day.filter(s => s.h >= sliderStart && s.h < sliderEnd);
+  }
+  let slots = [];
+  selectedPeriods.forEach(p => {
+    const r = PERIOD_HOURS[p];
+    slots.push(...day.filter(s => s.h >= r.start && s.h < r.end));
+  });
+  return slots;
+}
+
+function aggregate(slots) {
+  if (!slots.length) return null;
+  const avgHum  = slots.reduce((s,w)=>s+w.hum,0)/slots.length;
+  const minTemp = Math.min(...slots.map(w=>w.temp));
+  const maxTemp = Math.max(...slots.map(w=>w.temp));
+  const maxWind = Math.max(...slots.map(w=>w.wind));
+  const maxRain     = Math.max(...slots.map(w=>w.rain));
+  const maxRainProb = Math.max(...slots.map(w=>w.rainProb ?? 0));
+  const minUV   = Math.min(...slots.map(w=>w.uv));
+  const maxUV   = Math.max(...slots.map(w=>w.uv));
+  return {
+    // lo/hi exposed for display and matching
+    tempLo: minTemp, tempHi: maxTemp,
+    // keep .temp as the coldest value so cold-weather tips trigger correctly
+    // (a "freezing" tip should fire if it gets that cold at any point)
+    temp: minTemp,
+    humidity: Math.round(avgHum),
+    windSpeed: Math.round(maxWind),
+    rainMm: maxRain,
+    rainProb: maxRainProb,
+    uvIndex: maxUV,   // worst-case UV for tip matching
+    uvLo: minUV, uvHi: maxUV,
+    rainLevel: getRainLevel(maxRain),
+    windLevel: getWindLevel(maxWind),
+  };
+}
+
+function evalNumeric(val, rule) {
+  switch(rule.op) {
+    case 'gt':  return val > rule.value;
+    case 'gte': return val >= rule.value;
+    case 'lt':  return val < rule.value;
+    case 'lte': return val <= rule.value;
+    case 'range': return val >= rule.min && val <= rule.max;
+  }
+  return false;
+}
+
+function tipMatchesTemp(weather, rule) {
+  const lo = weather.tempLo !== undefined ? weather.tempLo : weather.temp;
+  const hi = weather.tempHi !== undefined ? weather.tempHi : weather.temp;
+  switch(rule.op) {
+    // Cold-biased: tip fires if it gets this cold at any point
+    case 'lt':  return lo < rule.value;
+    case 'lte': return lo <= rule.value;
+    // Warm-biased: tip fires if it gets this warm at any point
+    case 'gt':  return hi > rule.value;
+    case 'gte': return hi >= rule.value;
+    // Range: tip fires if the outing temp window overlaps the rule range at all
+    case 'range': return lo <= rule.max && hi >= rule.min;
+  }
+  return false;
+}
+
+function tipMatches(weather, tip) {
+  return Object.entries(tip.conditions).every(([key, rule]) => {
+    switch(key) {
+      case 'temp':     return tipMatchesTemp(weather, rule);
+      case 'humidity': return evalNumeric(weather.humidity, rule);
+      // UV: use worst-case (highest) UV during outing
+      case 'uvIndex':  return evalNumeric(weather.uvHi !== undefined ? weather.uvHi : weather.uvIndex, rule);
+      case 'windSpeed':return evalNumeric(weather.windSpeed, rule);
+      case 'rain':
+        if (rule.op === 'eq') return weather.rainLevel !== 'none';
+        return rainLevelMet(weather.rainLevel, rule.level);
+      case 'rainProb':
+        return evalNumeric(weather.rainProb ?? 0, rule);
+      case 'wind':     return windLevelMet(weather.windLevel, rule.level);
+    }
+    return true;
+  });
+}
+
+function getApplicableTips(weather) {
+  const applicable = tips.filter(t => tipMatches(weather, t));
+  const seen = new Set();
+  const result = [];
+  // style + materials always show all matches
+  const alwaysAll = new Set(['style','materials']);
+  applicable.sort((a,b)=>b.priority-a.priority).forEach(tip => {
+    const cat = tip.category;
+    if (alwaysAll.has(cat)) {
+      result.push(tip);
+    } else if (ACC_SUBCATS.has(cat)) {
+      // acc subcategories: one per subcat (acc:head, acc:neck, acc:face, acc:foot)
+      if (!seen.has(cat)) { seen.add(cat); result.push(tip); }
+    } else {
+      // all other categories: one winner per category
+      if (!seen.has(cat)) { seen.add(cat); result.push(tip); }
+    }
+  });
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════════════════════
+
+function renderPeriodCards(day) {
+  const grid = document.getElementById('periods-grid');
+  if (!grid) return;
+  grid.innerHTML = PERIOD_META.map(p => {
+    const slots = day.filter(s => s.h >= PERIOD_HOURS[p.key].start && s.h < PERIOD_HOURS[p.key].end);
+    const lo = slots.length ? Math.min(...slots.map(s => s.temp)) : null;
+    const hi = slots.length ? Math.max(...slots.map(s => s.temp)) : null;
+    const isActive = selectedPeriods.has(p.key);
+    const tempHtml = lo !== null
+      ? `<div class="period-temp-range">
+           <span class="period-temp-lo">↓${displayTemp(lo)}°</span>
+           <span class="period-temp-hi">↑${displayTemp(hi)}°</span>
+         </div>`
+      : '';
+    return `
+      <div class="period-card ${p.key}${isActive ? ' active' : ''}" onclick="togglePeriod('${p.key}', this)">
+        <div class="period-emoji">${p.emoji}</div>
+        <div class="period-header">
+          <div>
+            <div class="period-name">${p.label}</div>
+            <div class="period-hours">${p.hours}</div>
+          </div>
+          ${tempHtml}
+        </div>
+        <div class="check-dot">✓</div>
+      </div>`;
+  }).join('');
+}
+
+function renderHome() {
+  // Date label + live clock
+  const todayDate = new Date();
+  todayDate.setDate(todayDate.getDate() + dayOffset);
+  const dateStr = dayOffset === 0 ? 'Today' :
+    dayOffset === -1 ? 'Yesterday' :
+    dayOffset === 1  ? 'Tomorrow' :
+    todayDate.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('date-label').textContent = dateStr;
+
+  // Date + time line (only show clock for today)
+  const now_dt = new Date();
+  const dateFmt = now_dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  let timeStr = '';
+  if (dayOffset === 0) {
+    timeStr = ' · ' + now_dt.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  }
+  document.getElementById('hero-datetime').textContent = dateFmt + timeStr;
+
+  // City
+  document.getElementById('city-text').textContent = currentCity;
+
+  // Current weather — use the actual current hour slot for today, noon for other days
+  const day = getDaySlots(dayOffset);
+  const currentHour = dayOffset === 0 ? now_dt.getHours() : 12;
+  const now = day[currentHour] || day[12];
+
+  // Render period cards with live temp ranges
+  renderPeriodCards(day);
+  const dayTemps = day.map(s => s.temp);
+  const loTemp = Math.min(...dayTemps);
+  const hiTemp = Math.max(...dayTemps);
+  const wx = wmoToWeather(now.wcode ?? 0);
+  document.getElementById('big-temp').innerHTML = `${displayTemp(now.temp)}<sup>${unitLabel()}</sup>`;
+  document.getElementById('temp-range').innerHTML =
+    `<span class="lo">↓${displayTemp(loTemp)}°</span> <span class="hi">↑${displayTemp(hiTemp)}°</span>`;
+  document.getElementById('feels-like').textContent = `Feels like ${displayTemp(now.feelsLike ?? now.temp - 3)}${unitLabel()}`;
+  document.getElementById('weather-desc').textContent = wx.desc;
+  document.getElementById('weather-emoji').textContent = wx.emoji;
+  document.getElementById('rain-prob-val').textContent = `${now.rainProb ?? 0}%`;
+  document.getElementById('humidity-val').textContent = `${now.hum}%`;
+  document.getElementById('wind-val').textContent = `${now.wind} km/h`;
+  const windLevelNow = WIND_LEVELS.find(w => w.key === getWindLevel(now.wind));
+  document.getElementById('wind-lbl').textContent = windLevelNow ? windLevelNow.label : 'Wind';
+  document.getElementById('uv-val').textContent = now.uv;
+  document.getElementById('unit-c').classList.toggle('active', unit === 'C');
+  document.getElementById('unit-f').classList.toggle('active', unit === 'F');
+
+  // Aggregate
+  const slots = getSlots();
+  const agg = aggregate(slots.length ? slots : day);
+
+  // Agg row
+  const aggRow = document.getElementById('agg-row');
+  const tempRangeStr = agg.tempLo !== undefined && agg.tempHi !== agg.tempLo
+    ? `<span class="agg-lo">${displayTemp(agg.tempLo)}°</span><span class="agg-sep"> – </span><span class="agg-hi">${displayTemp(agg.tempHi)}°</span>`
+    : `${displayTemp(agg.tempLo ?? agg.temp)}${unitLabel()}`;
+  const uvRangeStr = agg.uvLo !== undefined && agg.uvHi !== agg.uvLo
+    ? `<span class="agg-lo">${agg.uvLo}</span><span class="agg-sep"> – </span><span class="agg-hi">${agg.uvHi}</span>`
+    : `${agg.uvHi ?? agg.uvIndex}`;
+  aggRow.innerHTML = `
+    <div class="agg-stat">
+      <div class="agg-stat-emoji">🌡️</div>
+      <div class="agg-stat-val agg-range-val">${tempRangeStr}</div>
+      <div class="agg-stat-lbl">Temp Range</div>
+    </div>
+    <div class="agg-stat"><div class="agg-stat-emoji">🌧️</div><div class="agg-stat-val">${agg.rainProb ?? 0}%</div><div class="agg-stat-lbl">Rain Chance</div></div>
+    <div class="agg-stat"><div class="agg-stat-emoji">💧</div><div class="agg-stat-val">${agg.humidity}%</div><div class="agg-stat-lbl">Humidity</div></div>
+    <div class="agg-stat"><div class="agg-stat-emoji">💨</div><div class="agg-stat-val">${agg.windSpeed} km/h</div><div class="agg-stat-lbl">Max Wind</div></div>
+    <div class="agg-stat">
+      <div class="agg-stat-emoji">☀️</div>
+      <div class="agg-stat-val agg-range-val">${uvRangeStr}</div>
+      <div class="agg-stat-lbl">UV Range</div>
+    </div>
+  `;
+
+  // Level badges
+  const lb = document.getElementById('level-badges');
+  const rl = RAIN_LEVELS.find(r=>r.key===agg.rainLevel);
+  const wl = WIND_LEVELS.find(w=>w.key===agg.windLevel);
+  lb.innerHTML = (rl ? `<span class="level-badge rain">${rl.emoji} ${rl.label}</span>` : '') +
+                 (wl ? `<span class="level-badge wind">${wl.emoji} ${wl.label}</span>` : '');
+
+  // Suggestions
+  const sugg = getApplicableTips(agg);
+  const list = document.getElementById('suggestions-list');
+  document.getElementById('suggestions-lbl').textContent = sugg.length ? 'WHAT TO WEAR' : 'NO SPECIFIC TIPS MATCH';
+  if (!sugg.length) {
+    list.innerHTML = `<div class="no-tips"><div class="no-tips-emoji">👕</div><div class="no-tips-text">Conditions look comfortable — dress as you normally would!</div></div>`;
+  } else {
+    // Group acc subcategories together under one header
+    const ACC_GROUP_LABEL = "Accessories";
+    let html = '';
+    let accGroupOpen = false;
+    let delay = 0;
+    sugg.forEach(t => {
+      const isAcc = ACC_SUBCATS.has(t.category);
+      if (isAcc && !accGroupOpen) {
+        html += `<div class="group-header">👜 Accessories</div>`;
+        accGroupOpen = true;
+      } else if (!isAcc) {
+        accGroupOpen = false;
+      }
+      html += `
+        <div class="tip-card${isAcc?' tip-card-acc':''}" style="animation-delay:${delay*0.05}s" onclick="toggleTipExpand(event,this)">
+          <div class="tip-emoji">${renderIcon(t.emoji,36)}</div>
+          <div class="tip-body">
+            <div class="tip-label-row">
+              <div class="tip-label">${t.label}</div>
+              <span class="tip-chevron">▼</span>
+            </div>
+            <span class="tip-cat">${CAT_LABELS[t.category]||t.category}</span>
+            <div class="tip-text">${t.suggestion}</div>
+          </div>
+        </div>`;
+      delay++;
+    });
+    list.innerHTML = html;
+  }
+}
+
+function toggleTipExpand(e, card) {
+  const wasExpanded = card.classList.contains('expanded');
+  // Collapse all others
+  document.querySelectorAll('.tip-card.expanded').forEach(el => el.classList.remove('expanded'));
+  // Toggle this one
+  if (!wasExpanded) card.classList.add('expanded');
+}
+
+// Tap outside suggestions list collapses all
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.tip-card')) {
+    document.querySelectorAll('.tip-card.expanded').forEach(el => el.classList.remove('expanded'));
+  }
+});
+
+function renderAdmin() {
+  document.getElementById('admin-sub').textContent = `${tips.length} tips configured · ${unitLabel()} display`;
+
+  // Filter pills
+  const pillsEl = document.getElementById('filter-pills');
+  const displayCats = ['all',...FILTER_CATS];
+  pillsEl.innerHTML = displayCats.map(cat=>`
+    <div class="pill${filterCat===cat?' active':''}" onclick="setFilter('${cat}')">${cat==='all'?'All':(CAT_LABELS[cat]||cat)}</div>
+  `).join('');
+
+  // Tips list
+  const filtered = filterCat==='all' ? tips : tips.filter(t=> filterCat==='accessories' ? ACC_SUBCATS.has(t.category) : t.category===filterCat);
+  document.getElementById('tips-list').innerHTML = filtered.map(tip=>`
+    <div class="tip-row">
+      <div class="tip-row-main" onclick="toggleExpand('${tip.id}')">
+        <div class="tip-row-emoji">${renderIcon(tip.emoji,26)}</div>
+        <div class="tip-row-info">
+          <div class="tip-row-label">${tip.label}</div>
+          <div class="tip-row-tags">
+            <span class="tag tag-cat">${CAT_LABELS[tip.category]||tip.category}</span>
+            <span class="tag tag-pri">P${tip.priority}</span>
+          </div>
+        </div>
+        <div class="tip-row-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();openModal('${tip.id}')" title="Edit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="icon-btn" onclick="event.stopPropagation();deleteTipById('${tip.id}')" title="Delete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tip-row-expanded" id="exp-${tip.id}" style="display:none">
+        <div class="exp-sug">${tip.suggestion}</div>
+        <div class="cond-header">Triggers when:</div>
+        ${condSummary(tip).map(s=>`<div class="cond-line">• ${s}</div>`).join('')}
+      </div>
+    </div>
+  `).join('') || '<div style="color:var(--dim);text-align:center;padding:20px;font-size:13px">No tips in this category</div>';
+}
+
+function condSummary(tip) {
+  return Object.entries(tip.conditions).map(([k,v])=>{
+    if (k==='rain') { const rl=RAIN_LEVELS.find(r=>r.key===(v.level||'drizzle')); return `🌧️ Rain ≥ ${rl?.label||v.level}`; }
+    if (k==='wind') { const wl=WIND_LEVELS.find(w=>w.key===(v.level||'light')); return `💨 Wind ≥ ${wl?.label||v.level}`; }
+    if (k==='temp') {
+      const show = (c)=>`${displayTemp(c)}${unitLabel()}`;
+      if (v.op==='range') return `🌡️ Temp between ${show(v.min)} – ${show(v.max)}`;
+      const ops={gt:'>',gte:'≥',lt:'<',lte:'≤'};
+      return `🌡️ Temp ${ops[v.op]||v.op} ${show(v.value)}`;
+    }
+    if (k==='humidity') return `💧 Humidity ≥ ${v.value}%`;
+    if (k==='rainProb') return `🌧️ Rain chance ≥ ${v.value}%`;
+    if (k==='uvIndex')  return `☀️ UV ≥ ${v.value}`;
+    return `${k}: ${JSON.stringify(v)}`;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DAY BROWSING
+// ══════════════════════════════════════════════════════════════════════════════
+
+function shiftDay(delta) {
+  const newOffset = dayOffset + delta;
+  const days = ALL_DAYS || [];
+  const maxFuture = days.length ? days.length - TODAY_IDX - 1 : 15;
+  const maxPast   = -TODAY_IDX;
+  if (newOffset < maxPast || newOffset > maxFuture) return;
+  dayOffset = newOffset;
+  renderHome();
+}
+
+// Swipe detection on the hero card
+(function() {
+  let tx = 0, ty = 0;
+  document.addEventListener('touchstart', e => {
+    if (!e.target.closest('#weather-hero-card')) return;
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if (!e.target.closest('#weather-hero-card')) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    const dy = e.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) shiftDay(dx < 0 ? 1 : -1);
+  }, {passive:true});
+})();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CITY SEARCH
+// ══════════════════════════════════════════════════════════════════════════════
+
+// City database — works offline, no API key needed
+// Each entry: [city, country, countryCode, lat, lon]
+const CITY_DB = [
+  ["New York","United States","🇺🇸",40.71,-74.01],["Los Angeles","United States","🇺🇸",34.05,-118.24],
+  ["Chicago","United States","🇺🇸",41.85,-87.65],["Houston","United States","🇺🇸",29.76,-95.37],
+  ["Phoenix","United States","🇺🇸",33.45,-112.07],["Philadelphia","United States","🇺🇸",39.95,-75.17],
+  ["San Antonio","United States","🇺🇸",29.42,-98.49],["San Diego","United States","🇺🇸",32.72,-117.16],
+  ["Dallas","United States","🇺🇸",32.79,-96.77],["San Francisco","United States","🇺🇸",37.77,-122.42],
+  ["Seattle","United States","🇺🇸",47.61,-122.33],["Denver","United States","🇺🇸",39.74,-104.98],
+  ["Boston","United States","🇺🇸",42.36,-71.06],["Miami","United States","🇺🇸",25.77,-80.19],
+  ["Atlanta","United States","🇺🇸",33.75,-84.39],["Minneapolis","United States","🇺🇸",44.98,-93.27],
+  ["Portland","United States","🇺🇸",45.52,-122.68],["Las Vegas","United States","🇺🇸",36.17,-115.14],
+  ["Nashville","United States","🇺🇸",36.17,-86.78],["Austin","United States","🇺🇸",30.27,-97.74],
+  ["London","United Kingdom","🇬🇧",51.51,-0.13],["Manchester","United Kingdom","🇬🇧",53.48,-2.24],
+  ["Edinburgh","United Kingdom","🇬🇧",55.95,-3.19],["Birmingham","United Kingdom","🇬🇧",52.48,-1.90],
+  ["Glasgow","United Kingdom","🇬🇧",55.86,-4.26],["Leeds","United Kingdom","🇬🇧",53.80,-1.55],
+  ["Paris","France","🇫🇷",48.85,2.35],["Lyon","France","🇫🇷",45.75,4.85],
+  ["Marseille","France","🇫🇷",43.30,5.37],["Nice","France","🇫🇷",43.71,7.26],
+  ["Berlin","Germany","🇩🇪",52.52,13.40],["Munich","Germany","🇩🇪",48.14,11.58],
+  ["Hamburg","Germany","🇩🇪",53.55,10.00],["Frankfurt","Germany","🇩🇪",50.11,8.68],
+  ["Cologne","Germany","🇩🇪",50.94,6.96],["Stuttgart","Germany","🇩🇪",48.78,9.18],
+  ["Madrid","Spain","🇪🇸",40.42,-3.70],["Barcelona","Spain","🇪🇸",41.39,2.15],
+  ["Seville","Spain","🇪🇸",37.39,-5.99],["Valencia","Spain","🇪🇸",39.47,-0.38],
+  ["Rome","Italy","🇮🇹",41.90,12.48],["Milan","Italy","🇮🇹",45.47,9.19],
+  ["Naples","Italy","🇮🇹",40.85,14.27],["Venice","Italy","🇮🇹",45.44,12.33],
+  ["Amsterdam","Netherlands","🇳🇱",52.37,4.90],["Rotterdam","Netherlands","🇳🇱",51.92,4.48],
+  ["Brussels","Belgium","🇧🇪",50.85,4.35],["Vienna","Austria","🇦🇹",48.21,16.37],
+  ["Zurich","Switzerland","🇨🇭",47.38,8.54],["Geneva","Switzerland","🇨🇭",46.20,6.15],
+  ["Stockholm","Sweden","🇸🇪",59.33,18.07],["Gothenburg","Sweden","🇸🇪",57.71,11.97],
+  ["Oslo","Norway","🇳🇴",59.91,10.75],["Copenhagen","Denmark","🇩🇰",55.68,12.57],
+  ["Helsinki","Finland","🇫🇮",60.17,24.94],["Warsaw","Poland","🇵🇱",52.23,21.01],
+  ["Prague","Czech Republic","🇨🇿",50.09,14.42],["Budapest","Hungary","🇭🇺",47.50,19.04],
+  ["Lisbon","Portugal","🇵🇹",38.72,-9.14],["Porto","Portugal","🇵🇹",41.15,-8.61],
+  ["Athens","Greece","🇬🇷",37.98,23.73],["Istanbul","Turkey","🇹🇷",41.01,28.95],
+  ["Tokyo","Japan","🇯🇵",35.69,139.69],["Osaka","Japan","🇯🇵",34.69,135.50],
+  ["Kyoto","Japan","🇯🇵",35.01,135.77],["Sapporo","Japan","🇯🇵",43.06,141.35],
+  ["Beijing","China","🇨🇳",39.91,116.39],["Shanghai","China","🇨🇳",31.23,121.47],
+  ["Shenzhen","China","🇨🇳",22.54,114.06],["Hong Kong","China","🇨🇳",22.32,114.17],
+  ["Seoul","South Korea","🇰🇷",37.57,126.98],["Busan","South Korea","🇰🇷",35.10,129.03],
+  ["Singapore","Singapore","🇸🇬",1.35,103.82],["Bangkok","Thailand","🇹🇭",13.75,100.52],
+  ["Kuala Lumpur","Malaysia","🇲🇾",3.14,101.69],["Jakarta","Indonesia","🇮🇩",-6.21,106.85],
+  ["Manila","Philippines","🇵🇭",14.60,120.98],["Ho Chi Minh City","Vietnam","🇻🇳",10.82,106.63],
+  ["Hanoi","Vietnam","🇻🇳",21.03,105.85],["Taipei","Taiwan","🇹🇼",25.05,121.53],
+  ["Mumbai","India","🇮🇳",19.08,72.88],["Delhi","India","🇮🇳",28.67,77.22],
+  ["Bangalore","India","🇮🇳",12.97,77.59],["Chennai","India","🇮🇳",13.09,80.27],
+  ["Kolkata","India","🇮🇳",22.57,88.36],["Hyderabad","India","🇮🇳",17.38,78.49],
+  ["Dubai","UAE","🇦🇪",25.20,55.27],["Abu Dhabi","UAE","🇦🇪",24.47,54.37],
+  ["Riyadh","Saudi Arabia","🇸🇦",24.69,46.72],["Doha","Qatar","🇶🇦",25.29,51.53],
+  ["Cairo","Egypt","🇪🇬",30.06,31.25],["Cape Town","South Africa","🇿🇦",-33.93,18.42],
+  ["Johannesburg","South Africa","🇿🇦",-26.20,28.04],["Lagos","Nigeria","🇳🇬",6.45,3.39],
+  ["Nairobi","Kenya","🇰🇪",-1.28,36.82],["Casablanca","Morocco","🇲🇦",33.59,-7.62],
+  ["Sydney","Australia","🇦🇺",-33.87,151.21],["Melbourne","Australia","🇦🇺",-37.81,144.96],
+  ["Brisbane","Australia","🇦🇺",-27.47,153.03],["Perth","Australia","🇦🇺",-31.95,115.86],
+  ["Auckland","New Zealand","🇳🇿",-36.87,174.77],["Wellington","New Zealand","🇳🇿",-41.29,174.78],
+  ["Toronto","Canada","🇨🇦",43.70,-79.42],["Vancouver","Canada","🇨🇦",49.2827,-123.1207],
+  ["Montreal","Canada","🇨🇦",45.51,-73.56],["Calgary","Canada","🇨🇦",51.05,-114.07],
+  ["Ottawa","Canada","🇨🇦",45.42,-75.70],["Edmonton","Canada","🇨🇦",53.55,-113.49],
+  ["Mexico City","Mexico","🇲🇽",19.43,-99.13],["Guadalajara","Mexico","🇲🇽",20.67,-103.35],
+  ["São Paulo","Brazil","🇧🇷",-23.55,-46.63],["Rio de Janeiro","Brazil","🇧🇷",-22.91,-43.17],
+  ["Buenos Aires","Argentina","🇦🇷",-34.60,-58.38],["Santiago","Chile","🇨🇱",-33.46,-70.65],
+  ["Bogotá","Colombia","🇨🇴",4.71,-74.07],["Lima","Peru","🇵🇪",-12.05,-77.04],
+  ["Reykjavik","Iceland","🇮🇸",64.14,-21.94],["Dublin","Ireland","🇮🇪",53.33,-6.25],
+  ["Zurich","Switzerland","🇨🇭",47.38,8.54],["Bern","Switzerland","🇨🇭",46.95,7.44],
+  ["Warsaw","Poland","🇵🇱",52.23,21.01],["Kraków","Poland","🇵🇱",50.06,19.94],
+  ["Bucharest","Romania","🇷🇴",44.43,26.10],["Sofia","Bulgaria","🇧🇬",42.70,23.32],
+  ["Moscow","Russia","🇷🇺",55.75,37.62],["St. Petersburg","Russia","🇷🇺",59.94,30.32],
+];
+
+function openCitySearch() {
+  document.getElementById('city-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('city-input').focus(), 100);
+  document.getElementById('city-input').value = '';
+  document.getElementById('city-results').innerHTML = '';
+}
+function closeCitySearch() {
+  document.getElementById('city-overlay').classList.remove('open');
+}
+function onCityInput() {
+  clearTimeout(citySearchTimeout);
+  citySearchTimeout = setTimeout(searchCities, 150);
+}
+function onCityKey(e) {
+  if (e.key === 'Escape') closeCitySearch();
+}
+function searchCities() {
+  const q = document.getElementById('city-input').value.trim().toLowerCase();
+  const res = document.getElementById('city-results');
+  if (q.length < 2) { res.innerHTML = ''; return; }
+  const matches = CITY_DB.filter(([city]) => city.toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) {
+    res.innerHTML = '<div class="city-searching">No cities found — try another name</div>';
+    return;
+  }
+  res.innerHTML = matches.map(([city, country, flag, lat, lon]) => {
+    const safeCity    = city.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const safeCountry = country.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="city-result" onclick="selectCity('${safeCity}','${safeCountry}','${flag}',${lat},${lon})">
+      <span class="city-result-flag">${flag}</span>
+      <div class="city-result-info">
+        <div class="city-result-name">${city}</div>
+        <div class="city-result-sub">${country}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function selectCity(city, country, flag, lat, lon) {
+  currentCity = city + ', ' + country;
+  localStorage.setItem('ww_city', currentCity);
+  localStorage.setItem('ww_lat', lat);
+  localStorage.setItem('ww_lon', lon);
+  closeCitySearch();
+  dayOffset = 0;
+  fetchWeather(lat, lon);
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WEATHER CALENDAR
+// ══════════════════════════════════════════════════════════════════════════════
+
+function openCalendar() {
+  calYear  = new Date().getFullYear();
+  calMonth = new Date().getMonth();
+  renderCalendar();
+  document.getElementById('cal-overlay').classList.add('open');
+}
+function closeCalendar() {
+  document.getElementById('cal-overlay').classList.remove('open');
+}
+function calOverlayClick(e) {
+  if (e.target === document.getElementById('cal-overlay')) closeCalendar();
+}
+function shiftCalMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+function dayWeatherEmoji(slots) {
+  if (!slots) return '❓';
+  // Use the most common (mode) weather code for the daytime hours if available
+  const daySlots = slots.filter(s => s.h >= 6 && s.h <= 20);
+  const wcodes = daySlots.map(s => s.wcode).filter(w => w !== undefined);
+  if (wcodes.length) {
+    // pick the highest (worst) code for the day as representative
+    const worst = Math.max(...wcodes);
+    return wmoToWeather(worst).emoji;
+  }
+  // fallback to derived logic
+  const agg = aggregate(slots);
+  if (agg.rainMm > 10) return '⛈️';
+  if (agg.tempLo < 0 && agg.rainMm > 0.5) return '❄️';
+  if (agg.rainMm > 4)   return '🌧️';
+  if (agg.rainMm > 1)   return '🌦️';
+  if (agg.rainMm > 0.1) return '🌥️';
+  if (agg.uvHi >= 7)    return '☀️';
+  if (agg.uvHi >= 4)    return '🌤️';
+  return '⛅';
+}
+
+function renderCalendar() {
+  const MONTHS = ["January","February","March","April","May","June",
+                  "July","August","September","October","November","December"];
+  document.getElementById('cal-month-label').textContent = `${MONTHS[calMonth]} ${calYear}`;
+
+  const today = new Date();
+  const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+  const firstDow = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  let html = '';
+  // Leading empty cells (prev month days)
+  for (let i = 0; i < firstDow; i++) {
+    const d = daysInPrev - firstDow + i + 1;
+    html += `<div class="cal-cell other-month empty"><span class="cal-cell-icon">·</span><span class="cal-cell-day">${d}</span></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const thisDate   = new Date(calYear, calMonth, d);
+    const offset     = Math.round((thisDate - today) / 86400000);
+    const isToday    = (calYear===todayY && calMonth===todayM && d===todayD);
+    const isSelected = (offset === dayOffset);
+    const inRange    = offset >= -TODAY_IDX && offset < ((ALL_DAYS||[]).length - TODAY_IDX);
+    const emoji      = inRange ? dayWeatherEmoji(getDaySlots(offset)) : '·';
+    const cls        = ['cal-cell', isToday?'today':'', isSelected?'selected':'', !inRange?'other-month':''].filter(Boolean).join(' ');
+    let tempInfo = '';
+    if (inRange) {
+      const dSlots   = getDaySlots(offset);
+      const noonTemp = displayTemp(dSlots[12].temp);
+      const loT      = displayTemp(Math.min(...dSlots.map(s=>s.temp)));
+      const hiT      = displayTemp(Math.max(...dSlots.map(s=>s.temp)));
+      tempInfo = `<span class="cal-noon">${noonTemp}°</span><span class="cal-range"><span class="lo">${loT}</span><span class="hi">${hiT}</span></span>`;
+    }
+    html += `<div class="${cls}" onclick="${inRange?`jumpToDay(${offset})`:''}">
+      <span class="cal-cell-icon">${emoji}</span>
+      <span class="cal-cell-day">${d}</span>
+      ${tempInfo}
+    </div>`;
+  }
+
+  // Trailing empty cells
+  const total = firstDow + daysInMonth;
+  const trail = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 1; i <= trail; i++) {
+    html += `<div class="cal-cell other-month empty"><span class="cal-cell-icon">·</span><span class="cal-cell-day">${i}</span></div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function jumpToDay(offset) {
+  dayOffset = offset;
+  closeCalendar();
+  renderHome();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INTERACTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('fab').style.display = name==='admin' ? 'flex' : 'none';
+  if (name==='admin') renderAdmin();
+}
+
+function toggleUnit() {
+  unit = unit==='C' ? 'F' : 'C';
+  localStorage.setItem('ww_unit', unit);
+  renderHome();
+  document.getElementById('temp-unit-lbl').textContent = `(${unitLabel()})`;
+}
+
+function setMode(m, btn) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('period-panel').style.display  = m==='periods' ? 'block' : 'none';
+  document.getElementById('slider-panel').style.display  = m==='slider'  ? 'block' : 'none';
+  renderHome();
+}
+
+function togglePeriod(name) {
+  if (selectedPeriods.has(name) && selectedPeriods.size === 1) return; // always keep at least one
+  if (selectedPeriods.has(name)) selectedPeriods.delete(name);
+  else selectedPeriods.add(name);
+  renderHome();
+}
+
+function updateSlider() {
+  let s = parseInt(document.getElementById('start-slider').value);
+  let e = parseInt(document.getElementById('end-slider').value);
+  if (s >= e) { if (document.activeElement === document.getElementById('start-slider')) { s = e-1; document.getElementById('start-slider').value=s; } else { e=s+1; document.getElementById('end-slider').value=e; } }
+  sliderStart=s; sliderEnd=e;
+  document.getElementById('slider-start-lbl').textContent = hourLabel(s);
+  document.getElementById('slider-end-lbl').textContent   = hourLabel(e);
+  renderHome();
+}
+
+function setFilter(cat) { filterCat=cat; renderAdmin(); }
+function toggleExpand(id) {
+  const el = document.getElementById('exp-'+id);
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+function deleteTipById(id) {
+  if (!confirm('Delete this tip?')) return;
+  tips = tips.filter(t=>t.id!==id);
+  saveTips(); renderAdmin();
+}
+function resetTips() {
+  if (!confirm('Reset ALL tips to defaults? This cannot be undone.')) return;
+  tips = JSON.parse(JSON.stringify(DEFAULT_TIPS));
+  saveTips(); renderAdmin(); renderHome();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════════════════════════
+
+function buildModal(tip) {
+  // Category chips
+  document.getElementById('cat-chips').innerHTML = CATEGORIES.map(c=>`
+    <div class="chip${(tip?tip.category:formCategory)===c?' active':''}" onclick="selectCat('${c}',this)">${CAT_LABELS[c]||c}</div>
+  `).join('');
+
+  // Priority chips
+  document.getElementById('pri-chips').innerHTML = [1,2,3,4,5,6,7,8,9,10].map(n=>`
+    <div class="chip${(tip?tip.priority:formPriority)===n?' pri-active':''}" style="${(tip?tip.priority:formPriority)===n?'background:var(--warm);border-color:var(--warm);color:#000':''}" onclick="selectPri(${n},this)">${n}</div>
+  `).join('');
+
+  // Rain levels
+  const currentRain = tip?.conditions?.rain?.level || formRainLevel;
+  document.getElementById('rain-levels').innerHTML = RAIN_LEVELS.map(r=>`
+    <div class="level-row${currentRain===r.key?' rain-active':''}" id="rain-row-${r.key}" onclick="selectRain('${r.key}')">
+      <span class="level-row-emoji">${r.emoji}</span>
+      <div class="level-row-info"><div class="level-row-name">${r.label}</div><div class="level-row-sub">${r.sub}</div></div>
+      <span class="level-check">✓</span>
+    </div>
+  `).join('');
+  document.getElementById('rain-clear').style.display = currentRain ? 'block' : 'none';
+
+  // Wind levels
+  const currentWind = tip?.conditions?.wind?.level || formWindLevel;
+  document.getElementById('wind-levels').innerHTML = WIND_LEVELS.map(w=>`
+    <div class="level-row${currentWind===w.key?' wind-active':''}" id="wind-row-${w.key}" onclick="selectWind('${w.key}')">
+      <span class="level-row-emoji">${w.emoji}</span>
+      <div class="level-row-info"><div class="level-row-name">${w.label}</div><div class="level-row-sub">${w.sub}</div></div>
+      <span class="level-check">✓</span>
+    </div>
+  `).join('');
+  document.getElementById('wind-clear').style.display = currentWind ? 'block' : 'none';
+
+  // Temp condition
+  const tempCond = tip?.conditions?.temp;
+  const tempEnabled = !!tempCond;
+  document.getElementById('temp-enabled').checked = tempEnabled;
+  document.getElementById('temp-cond-body').style.display = tempEnabled ? 'block' : 'none';
+  formTempOp = tempCond?.op || 'gt';
+  buildOpRows();
+  buildTempInputs(tempCond);
+
+  // Humidity
+  const humCond = tip?.conditions?.humidity;
+  document.getElementById('hum-enabled').checked = !!humCond;
+  document.getElementById('hum-cond-body').style.display = humCond ? 'block' : 'none';
+  document.getElementById('hum-val').value = humCond?.value || '';
+
+  // Rain Probability
+  const rainProbCond = tip?.conditions?.rainProb;
+  document.getElementById('rainprob-enabled').checked = !!rainProbCond;
+  document.getElementById('rainprob-cond-body').style.display = rainProbCond ? 'block' : 'none';
+  const rpv = rainProbCond?.value ?? 40;
+  document.getElementById('rainprob-val').value = rpv;
+  document.getElementById('rainprob-display').textContent = rpv + '%';
+
+  // UV
+  const uvCond = tip?.conditions?.uvIndex;
+  document.getElementById('uv-enabled').checked = !!uvCond;
+  document.getElementById('uv-cond-body').style.display = uvCond ? 'block' : 'none';
+  document.getElementById('uv-val').value = uvCond?.value || '';
+
+  document.getElementById('temp-unit-lbl').textContent = `(${unitLabel()})`;
+}
+
+function buildOpRows() {
+  const ops = [{op:'gt',label:'> (over)'},{op:'gte',label:'≥ (at least)'},{op:'lt',label:'< (under)'},{op:'lte',label:'≤ (up to)'},{op:'range',label:'between two values'}];
+  document.getElementById('op-rows').innerHTML = ops.map(o=>`
+    <div class="op-row${formTempOp===o.op?' active':''}" onclick="selectOp('${o.op}')">
+      <span class="op-row-text">${o.label}</span>
+      <span class="op-check">✓</span>
+    </div>
+  `).join('');
+}
+
+function buildTempInputs(existing) {
+  const ph = unit==='F' ? 32 : 0;
+  const existVal = (existing?.value !== undefined && !isNaN(existing.value))
+    ? displayTemp(existing.value)
+    : (existing?.min !== undefined && !isNaN(existing.min)) ? displayTemp(existing.min) : '';
+  const existMax = (existing?.max !== undefined && !isNaN(existing.max)) ? displayTemp(existing.max) : '';
+  const u = unitLabel();
+  if (formTempOp==='range') {
+    document.getElementById('temp-inputs').innerHTML = `
+      <div class="input-row">
+        <div class="input-col"><label>From ${u}</label><input class="input" id="temp-min" type="number" placeholder="${ph}" value="${existVal}"></div>
+        <div class="input-col"><label>To ${u}</label><input class="input" id="temp-max" type="number" placeholder="${ph+10}" value="${existMax}"></div>
+      </div>`;
+  } else {
+    document.getElementById('temp-inputs').innerHTML = `
+      <div class="input-col"><label>Value ${u}</label><input class="input" id="temp-val" type="number" placeholder="${ph}" value="${existVal}"></div>`;
+  }
+}
+
+function selectOp(op) {
+  // Preserve any value the user already typed before re-rendering inputs
+  const oldVal = document.getElementById('temp-val')?.value || '';
+  const oldMin = document.getElementById('temp-min')?.value || '';
+  const oldMax = document.getElementById('temp-max')?.value || '';
+  formTempOp = op;
+  buildOpRows();
+  // Pass existing values so they survive the re-render
+  const preserved = op === 'range'
+    ? { op, min: parseFloat(oldMin)||undefined, max: parseFloat(oldMax)||undefined }
+    : { op, value: parseFloat(oldVal)||undefined };
+  buildTempInputs(preserved);
+}
+function selectCat(cat, el) { formCategory=cat; document.querySelectorAll('#cat-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); }
+function selectPri(n, el) { formPriority=n; document.querySelectorAll('#pri-chips .chip').forEach(c=>{c.classList.remove('pri-active');c.style.background='';c.style.borderColor='';c.style.color='';}); el.classList.add('pri-active'); el.style.background='var(--warm)'; el.style.borderColor='var(--warm)'; el.style.color='#000'; }
+function selectRain(key) {
+  formRainLevel = formRainLevel===key ? null : key;
+  document.querySelectorAll('[id^="rain-row-"]').forEach(el=>{ el.classList.remove('rain-active'); });
+  if (formRainLevel) document.getElementById('rain-row-'+formRainLevel)?.classList.add('rain-active');
+  document.getElementById('rain-clear').style.display = formRainLevel ? 'block' : 'none';
+}
+function selectWind(key) {
+  formWindLevel = formWindLevel===key ? null : key;
+  document.querySelectorAll('[id^="wind-row-"]').forEach(el=>{ el.classList.remove('wind-active'); });
+  if (formWindLevel) document.getElementById('wind-row-'+formWindLevel)?.classList.add('wind-active');
+  document.getElementById('wind-clear').style.display = formWindLevel ? 'block' : 'none';
+}
+function clearRain() { formRainLevel=null; selectRain(null); }
+function clearWind() { formWindLevel=null; selectWind(null); }
+function toggleTempCond() { document.getElementById('temp-cond-body').style.display = document.getElementById('temp-enabled').checked ? 'block' : 'none'; }
+function toggleHumCond()  { document.getElementById('hum-cond-body').style.display  = document.getElementById('hum-enabled').checked  ? 'block' : 'none'; }
+function toggleUvCond()   { document.getElementById('uv-cond-body').style.display   = document.getElementById('uv-enabled').checked   ? 'block' : 'none'; }
+function toggleRainProbCond() { document.getElementById('rainprob-cond-body').style.display = document.getElementById('rainprob-enabled').checked ? 'block' : 'none'; }
+
+function openModal(id) {
+  editingId = id;
+  const tip = id ? tips.find(t=>t.id===id) : null;
+  document.getElementById('modal-title').textContent = id ? 'Edit Tip' : 'New Tip';
+  selectedEmoji = tip?.emoji || '👕';
+  const prevEl = document.getElementById('emoji-preview');
+  if (CUSTOM_ICONS[selectedEmoji]) { prevEl.innerHTML = CUSTOM_ICONS[selectedEmoji]; }
+  else { prevEl.textContent = selectedEmoji; }
+  closeEmojiPicker();
+  document.getElementById('f-label').value      = tip?.label      || '';
+  document.getElementById('f-suggestion').value = tip?.suggestion || '';
+  formCategory   = tip?.category  || 'base';
+  formPriority   = tip?.priority  || 5;
+  formRainLevel  = tip?.conditions?.rain?.level  || null;
+  formWindLevel  = tip?.conditions?.wind?.level  || null;
+  formTempOp     = tip?.conditions?.temp?.op     || 'gt';
+  buildModal(tip);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); closeEmojiPicker(); }
+
+function saveTip() {
+  const label = document.getElementById('f-label').value.trim();
+  const suggestion = document.getElementById('f-suggestion').value.trim();
+  if (!label) return alert('Please enter a tip title.');
+
+  const conditions = {};
+  if (formRainLevel) conditions.rain = {op:'gte', level:formRainLevel};
+  if (formWindLevel) conditions.wind = {op:'gte', level:formWindLevel};
+
+  // Temp
+  if (document.getElementById('temp-enabled').checked) {
+    if (formTempOp==='range') {
+      const mn = parseFloat(document.getElementById('temp-min')?.value);
+      const mx = parseFloat(document.getElementById('temp-max')?.value);
+      if (!isNaN(mn) && !isNaN(mx)) {
+        conditions.temp = {op:'range', min: unit==='F'?fToC(mn):mn, max: unit==='F'?fToC(mx):mx};
+      }
+    } else {
+      const v = parseFloat(document.getElementById('temp-val')?.value);
+      if (!isNaN(v)) conditions.temp = {op:formTempOp, value: unit==='F'?fToC(v):v};
+    }
+  }
+  // Humidity
+  if (document.getElementById('hum-enabled').checked) {
+    const v = parseFloat(document.getElementById('hum-val').value);
+    if (!isNaN(v)) conditions.humidity = {op:'gte', value:v};
+  }
+  // Rain Probability
+  if (document.getElementById('rainprob-enabled').checked) {
+    const v = parseInt(document.getElementById('rainprob-val').value);
+    if (!isNaN(v)) conditions.rainProb = {op:'gte', value:v};
+  }
+  // UV
+  if (document.getElementById('uv-enabled').checked) {
+    const v = parseFloat(document.getElementById('uv-val').value);
+    if (!isNaN(v)) conditions.uvIndex = {op:'gte', value:v};
+  }
+
+  const payload = {
+    label, suggestion, emoji: selectedEmoji || '👕',
+    category: formCategory, priority: formPriority, conditions,
+  };
+
+  if (editingId) {
+    tips = tips.map(t => t.id===editingId ? {...t, ...payload} : t);
+  } else {
+    tips.push({id:'t'+Date.now(), ...payload});
+  }
+  saveTips(); closeModal(); renderAdmin(); renderHome();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════════
+document.getElementById('city-text').textContent = currentCity;
+
+// Fetch real weather on startup
+// Always derive coords fresh from CITY_DB to avoid stale cached values
+(function() {
+  const coords = getCityCoords();
+  // Update stored coords to match current city
+  localStorage.setItem('ww_lat', coords.lat);
+  localStorage.setItem('ww_lon', coords.lon);
+  fetchWeather(coords.lat, coords.lon);
+})();
+
+// Tick the clock every minute so the time stays current
+setInterval(() => {
+  if (dayOffset === 0) {
+    const n = new Date();
+    const dateFmt = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const timeStr = ' · ' + n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    document.getElementById('hero-datetime').textContent = dateFmt + timeStr;
+  }
+}, 60000);
+</script>
+</body>
+</html>
