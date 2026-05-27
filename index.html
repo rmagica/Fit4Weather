@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.open-meteo.com https://historical-forecast-api.open-meteo.com https://geocoding-api.open-meteo.com; img-src 'self' data:;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>WearWise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -64,25 +65,35 @@
   .weather-hero::before { content:''; position:absolute; top:-40px; right:-40px;
     width:180px; height:180px; background: radial-gradient(circle, rgba(91,196,245,.08) 0%, transparent 70%);
     border-radius:50%; pointer-events:none; }
-  .hero-row { display: flex; justify-content: space-between; align-items: flex-start; }
-  .hero-left {}
-  .hero-datetime { color: var(--dim); font-size: 11px; font-weight: 600; letter-spacing: .4px;
-    margin-bottom: 5px; }
+  .hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .hero-col1 { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .hero-col3 { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+  /* Big temp + hi/lo side by side */
+  .hero-temp-block { display: flex; align-items: stretch; gap: 6px; }
+  .hero-minmax { display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0 2px; }
+  .hero-minmax .hi { font-size: 13px; font-weight: 600; color: #f5c077; }
+  .hero-minmax .lo { font-size: 13px; font-weight: 600; color: #7ab3d4; }
+  .hero-datetime { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: .3px;
+    text-align: center; margin-bottom: 8px; cursor: pointer; }
+  .hero-datetime:hover { color: var(--text); }
   .city-name { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .5px; margin-bottom: 4px; }
-  .big-temp { font-family: 'DM Serif Display', serif; font-size: 72px; line-height: 1; color: var(--text); letter-spacing: -3px; }
-  .big-temp sup { font-size: 28px; vertical-align: super; letter-spacing: 0; }
+  .big-temp { font-family: 'DM Serif Display', serif; font-size: 56px; line-height: 1; color: var(--text); letter-spacing: -2px; }
+  .big-temp sup { font-size: 22px; vertical-align: super; letter-spacing: 0; }
   .weather-desc { color: var(--text); font-size: 14px; text-transform: capitalize; margin-top: 4px; opacity: .85; }
   .feels-like { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  .hero-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-  .weather-emoji { font-size: 64px; line-height: 1; }
+
+  .weather-emoji { font-size: 50px; line-height: 1; cursor: pointer; transition: transform .15s; }
+  .weather-emoji:hover { transform: scale(1.08); }
   .unit-toggle { display: flex; align-items: center; gap: 4px; background: rgba(0,0,0,.35);
     border-radius: 20px; padding: 5px 12px; cursor: pointer; user-select: none; }
   .unit-opt { font-size: 12px; font-weight: 700; color: var(--dim); transition: color .2s; }
   .unit-opt.active { color: var(--accent); }
   .unit-sep { color: var(--dim); font-size: 11px; }
-  .stats-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-  .stat-badge { display: flex; flex-direction: column; align-items: center; gap: 2px;
-    background: rgba(0,0,0,.22); border-radius: 10px; padding: 8px 12px; min-width: 64px; }
+  .stats-row { display: flex; gap: 5px; margin-top: 16px; flex-wrap: wrap; }
+  .stats-row .stat-badge { min-width: calc(20% - 4px); }
+  .stat-badge { display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; background: rgba(0,0,0,.22); border-radius: 10px; padding: 6px 2px;
+    flex: 1; min-width: 0; overflow: hidden; }
   .stat-badge-btn { cursor: pointer; border: 1px solid var(--border); transition: background .15s; }
   .stat-badge-btn:hover { background: rgba(255,255,255,.08); }
 
@@ -91,9 +102,9 @@
     letter-spacing: 0; }
   .temp-range .lo { color: #7ab3d4; }
   .temp-range .hi { color: #f5c077; }
-  .stat-icon { font-size: 14px; }
-  .stat-val { color: var(--text); font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .stat-lbl { color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .stat-icon { font-size: 13px; line-height: 1; }
+  .stat-val { color: var(--text); font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.1; }
+  .stat-lbl { color: var(--muted); font-size: 7px; white-space: normal; text-align: center; line-height: 1.15; max-width: 100%; }
   .rain-badge { color: var(--rain) !important; }
 
   /* ── SECTION LABEL ── */
@@ -108,23 +119,24 @@
   .mode-btn.active { background: var(--selected); color: var(--accent); }
 
   /* ── PERIOD GRID ── */
-  .periods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .period-card { border-radius: 16px; padding: 14px; border: 1.5px solid var(--border);
-    cursor: pointer; position: relative; transition: all .2s; background: var(--bg-card); }
+  .periods-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .period-card { border-radius: 12px; padding: 8px 4px; border: 1.5px solid var(--border);
+    cursor: pointer; position: relative; transition: all .2s; background: var(--bg-card);
+    display: flex; flex-direction: column; align-items: center; text-align: center; }
   .period-card.active { border-color: var(--warm); }
   .period-card.morning.active  { background: linear-gradient(135deg,#1a3a5c,#2d6a9f); }
   .period-card.afternoon.active { background: linear-gradient(135deg,#7a4a00,#c87d00); }
   .period-card.evening.active  { background: linear-gradient(135deg,#3a1a5c,#7a3d9f); }
   .period-card.night.active    { background: linear-gradient(135deg,#0a1020,#1a2840); border-color: var(--accent); }
-  .period-emoji { font-size: 26px; margin-bottom: 6px; }
-  .period-header { display: flex; justify-content: space-between; align-items: flex-start; }
-  .period-name { font-size: 14px; font-weight: 700; color: var(--muted); }
+  .period-emoji { font-size: 22px; margin-bottom: 3px; }
+  .period-header { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .period-name { font-size: 11px; font-weight: 700; color: var(--muted); }
   .period-card.active .period-name { color: #fff; }
-  .period-hours { font-size: 11px; color: var(--dim); margin-top: 3px; }
+  .period-hours { font-size: 9px; color: var(--dim); margin-top: 1px; }
   .period-card.active .period-hours { color: rgba(255,255,255,.65); }
-  .period-temp-range { text-align: right; line-height: 1.2; }
-  .period-temp-lo { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; color: #7ab3d4; display: block; letter-spacing: -1px; }
-  .period-temp-hi { font-size: 13px; font-weight: 700; color: #f5c077; display: block; margin-top: 2px; }
+  .period-temp-range { text-align: center; line-height: 1.2; margin-top: 4px; width: 100%; }
+  .period-temp-lo { font-family: 'DM Serif Display', serif; font-size: 16px; font-weight: 400; color: #7ab3d4; display: block; letter-spacing: -0.5px; }
+  .period-temp-hi { font-size: 11px; font-weight: 700; color: #f5c077; display: block; margin-top: 1px; }
   .check-dot { display: none !important; }
 
   /* ── SLIDER CARD ── */
@@ -135,23 +147,47 @@
   .slider-badge-val { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); margin-top: 2px; }
   .slider-arrow { color: var(--dim); font-size: 18px; }
   .slider-sub { color: var(--dim); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; margin-top: 10px; }
-  .range-wrap { position: relative; height: 36px; display: flex; align-items: center; }
-  input[type=range] { -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px; outline: none; cursor: pointer; background: var(--border); }
-  input[type=range].start-slider { accent-color: var(--accent); }
-  input[type=range].start-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 0 3px rgba(91,196,245,.2); }
-  input[type=range].end-slider { accent-color: var(--warm); }
-  input[type=range].end-slider::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--warm); box-shadow: 0 0 0 3px rgba(245,166,35,.2); }
+  .dual-range-wrap { position: relative; height: 60px; margin: 4px 0; }
+  .knob-label { position: absolute; top: 0; font-size: 10px; font-weight: 700;
+    color: var(--text); background: rgba(0,0,0,.45); border-radius: 5px;
+    padding: 1px 5px; transform: translateX(-50%); white-space: nowrap; pointer-events: none; }
+  .dual-range-wrap input[type=range] {
+    position: absolute; width: 100%; top: 70%; transform: translateY(-50%);
+    -webkit-appearance: none; appearance: none;
+    background: transparent; pointer-events: none; height: 4px; margin: 0; padding: 0;
+  }
+  .dual-range-wrap input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+    pointer-events: all; cursor: pointer; border: 2px solid var(--bg-card);
+  }
+  .dual-range-wrap input[type=range]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    pointer-events: all; cursor: pointer; border: 2px solid var(--bg-card);
+  }
+  #start-slider::-webkit-slider-thumb { background: var(--start-knob-color, #1a6aaa); box-shadow: 0 0 0 3px rgba(255,255,255,.15); }
+  #end-slider::-webkit-slider-thumb   { background: var(--end-knob-color,   #1a6aaa); box-shadow: 0 0 0 3px rgba(255,255,255,.15); }
+  #start-slider::-moz-range-thumb { background: var(--start-knob-color, #1a6aaa); }
+  #end-slider::-moz-range-thumb   { background: var(--end-knob-color,   #1a6aaa); }
+  .dual-range-track { position: absolute; top: 70%; left: 0; right: 0; height: 6px;
+    transform: translateY(-50%); border-radius: 3px; pointer-events: none;
+    background: linear-gradient(90deg,
+      #7ab3d4 0%,       /* 12am light blue */
+      #f5c077 50%,      /* 12pm yellow */
+      #7ab3d4 100%      /* 12am light blue */
+    ); }
+  .dual-range-fill { display: none; }
+  .dual-range-fill { position: absolute; height: 100%; border-radius: 2px; }
   .slider-ticks { display: flex; justify-content: space-between; margin-top: 6px; }
   .slider-tick { color: var(--dim); font-size: 10px; }
 
   /* ── AGG CARD ── */
   .agg-card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); padding: 18px; margin-bottom: 14px; }
-  .agg-row { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-  .agg-stat { text-align: center; }
-  .agg-stat-emoji { font-size: 20px; }
-  .agg-stat-val { color: var(--text); font-size: 14px; font-weight: 700; margin-top: 4px; }
-  .agg-stat-lbl { color: var(--muted); font-size: 10px; margin-top: 2px; }
-  .agg-range-val { font-size: 13px !important; }
+  .agg-row { display: flex; justify-content: space-between; gap: 4px; margin-bottom: 12px; }
+  .agg-stat { text-align: center; flex: 1; min-width: 0; }
+  .agg-stat-emoji { font-size: 16px; }
+  .agg-stat-val { color: var(--text); font-size: 11px; font-weight: 700; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agg-stat-lbl { color: var(--muted); font-size: 8px; margin-top: 1px; }
+  .agg-range-val { font-size: 10px !important; }
   .agg-lo  { color: #7ab3d4; font-weight: 700; }
   .agg-hi  { color: #f5c077; font-weight: 700; }
   .agg-sep { color: var(--dim); }
@@ -161,25 +197,25 @@
   .level-badge.wind { border-color: rgba(168,218,220,.5); background: rgba(168,218,220,.12); color: var(--wind); }
 
   /* ── TIP CARDS ── */
-  .tip-card { display: flex; gap: 14px; background: linear-gradient(135deg,#131e2d,#192538);
-    border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; border: 1px solid var(--border);
+  .tip-card { display: flex; gap: 10px; background: linear-gradient(135deg,#131e2d,#192538);
+    border-radius: 12px; padding: 9px 12px; margin-bottom: 7px; border: 1px solid var(--border);
     animation: fadeUp .25s ease both; }
-  .tip-emoji { font-size: 32px; flex-shrink: 0; display:flex; align-items:center; }
+  .tip-emoji { font-size: 22px; flex-shrink: 0; display:flex; align-items:center; }
   .tip-emoji .custom-icon { color: var(--text); }
   .tip-row-emoji .custom-icon { color: var(--text); }
   .tip-body { flex: 1; }
-  .tip-label { color: var(--text); font-size: 14px; font-weight: 700; }
+  .tip-label { color: var(--text); font-size: 12px; font-weight: 700; }
   .tip-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .tip-chevron { color: var(--dim); font-size: 11px; transition: transform .2s; flex-shrink: 0; }
   .tip-card.expanded .tip-chevron { transform: rotate(180deg); }
-  .tip-text { color: var(--muted); font-size: 13px; line-height: 1.5;
+  .tip-text { color: var(--muted); font-size: 12px; line-height: 1.45;
     max-height: 0; overflow: hidden; opacity: 0;
     transition: max-height .25s ease, opacity .2s ease, margin-top .2s ease;
     margin-top: 0; }
   .tip-card.expanded .tip-text { max-height: 200px; opacity: 1; margin-top: 6px; }
   .tip-cat { display: inline-block; background: var(--selected); color: var(--accent);
-    font-size: 9px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
-    padding: 2px 7px; border-radius: 5px; margin-top: 8px; }
+    font-size: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 1px 5px; border-radius: 4px; margin-top: 4px; }
   .no-tips { background: var(--bg-card); border-radius: 16px; padding: 28px; text-align: center;
     border: 1px solid var(--border); margin-bottom: 10px; }
   .no-tips-emoji { font-size: 40px; margin-bottom: 10px; }
@@ -257,17 +293,24 @@
 
   /* Level selector rows */
   .level-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
-    background: var(--bg-card); border: 1.5px solid var(--border); cursor: pointer; margin-bottom: 7px; transition: all .15s; }
-  .level-row.active { border-color: var(--accent); background: var(--selected); }
-  .level-row.rain-active { border-color: var(--rain); background: rgba(91,155,213,.15); }
-  .level-row.wind-active { border-color: var(--wind); background: rgba(168,218,220,.1); }
+    background: var(--bg-card); border: 1.5px solid var(--border); margin-bottom: 7px; transition: all .15s; }
+  .level-row.rain-require { border-color: var(--rain); background: rgba(91,155,213,.15); }
+  .level-row.wind-require { border-color: var(--wind); background: rgba(168,218,220,.1); }
+  .level-row.rain-exclude { border-color: #c0392b; background: rgba(192,57,43,.12); }
+  .level-row.wind-exclude { border-color: #c0392b; background: rgba(192,57,43,.12); }
   .level-row-emoji { font-size: 20px; }
   .level-row-info { flex: 1; }
   .level-row-name { font-size: 14px; font-weight: 600; color: var(--muted); }
-  .level-row.active .level-row-name, .level-row.rain-active .level-row-name, .level-row.wind-active .level-row-name { color: var(--text); }
+  .level-row.rain-require .level-row-name, .level-row.wind-require .level-row-name,
+  .level-row.rain-exclude .level-row-name, .level-row.wind-exclude .level-row-name { color: var(--text); }
   .level-row-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
-  .level-check { color: var(--accent); font-size: 16px; display: none; }
-  .level-row.active .level-check, .level-row.rain-active .level-check, .level-row.wind-active .level-check { display: block; }
+  .level-btns { display: flex; gap: 5px; }
+  .level-btn { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--dim); font-size: 15px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+  .level-btn:hover { border-color: var(--muted); color: var(--text); }
+  .level-btn.yes-active { border-color: var(--rain); background: rgba(91,155,213,.2); color: #7ab3d4; }
+  .level-btn.no-active  { border-color: #c0392b; background: rgba(192,57,43,.15); color: #e07070; }
 
   /* Temp condition */
   .cond-toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -294,7 +337,11 @@
   .clear-btn { background: none; border: none; color: var(--red); font-size: 11px; cursor: pointer;
     font-family: 'DM Sans', sans-serif; padding: 4px 0; margin-top: 4px; }
 
-  .reset-row { display: flex; justify-content: center; padding: 16px 0; }
+  .reset-row { display: flex; justify-content: center; gap: 10px; padding: 16px 0; flex-wrap: wrap; }
+  .export-btn { background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    font-size: 13px; cursor: pointer; padding: 8px 16px; border-radius: 10px; font-family: inherit;
+    display: flex; align-items: center; gap: 6px; transition: background .15s; }
+  .export-btn:hover { background: var(--bg-card2); }
   .reset-btn { background: none; border: none; color: var(--red); font-size: 13px; cursor: pointer;
     font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 6px; }
 
@@ -342,7 +389,8 @@
     align-items:center; justify-content:center; transition:background .15s; line-height:1; }
   .date-arrow:hover { background:rgba(255,255,255,.15); }
   .date-label { color:var(--text); font-size:13px; font-weight:700; letter-spacing:.5px;
-    min-width:130px; text-align:center; }
+    min-width:130px; text-align:center; cursor:pointer; }
+  .date-label:hover { color:var(--accent); }
 
   /* ── CITY SEARCH ── */
   .city-name { cursor:pointer; display:inline-flex; align-items:center; gap:5px;
@@ -430,26 +478,33 @@
 
     <!-- Weather Hero -->
     <div class="weather-hero" id="weather-hero-card">
-      <!-- Date nav row -->
+      <!-- Row 1: Today + arrows -->
       <div class="date-nav">
         <button class="date-arrow" onclick="shiftDay(-1)">‹</button>
-        <div class="date-label" id="date-label">Today</div>
+        <div class="date-label" id="date-label" onclick="openCalendar()">Today</div>
         <button class="date-arrow" onclick="shiftDay(1)">›</button>
       </div>
+      <!-- Row 2: Date + time -->
+      <div class="hero-datetime" id="hero-datetime" onclick="openCalendar()">Mon, Mar 8 · 2:34 PM</div>
+      <!-- Row 3: 2 columns -->
       <div class="hero-row">
-        <div class="hero-left">
-          <div class="hero-datetime" id="hero-datetime">Mon, Mar 8 · 2:34 PM</div>
+        <div class="hero-col1">
           <div class="city-name" id="city-name" onclick="openCitySearch()" title="Tap to change city">
             <span id="city-text">Vancouver, CA</span>
             <span class="city-edit-icon">✎</span>
           </div>
-          <div class="big-temp" id="big-temp">14<sup id="big-unit">°C</sup></div>
-          <div class="temp-range" id="temp-range"><span class="lo">↓8°</span> <span class="hi">↑16°</span></div>
-          <div class="weather-desc" id="weather-desc">partly cloudy</div>
+          <div class="hero-temp-block">
+            <div class="big-temp" id="big-temp">14<sup id="big-unit">°C</sup></div>
+            <div class="hero-minmax">
+              <span class="hi" id="hero-hi">↑16°</span>
+              <span class="lo" id="hero-lo">↓8°</span>
+            </div>
+          </div>
           <div class="feels-like" id="feels-like">Feels like 11°C</div>
+          <div class="weather-desc" id="weather-desc">partly cloudy</div>
         </div>
-        <div class="hero-right">
-          <div class="weather-emoji" id="weather-emoji">⛅</div>
+        <div class="hero-col3">
+          <div class="weather-emoji" id="weather-emoji" onclick="openCalendar()">⛅</div>
           <div class="unit-toggle" onclick="toggleUnit()">
             <span class="unit-opt active" id="unit-c">°C</span>
             <span class="unit-sep">|</span>
@@ -461,8 +516,8 @@
         <div class="stat-badge"><span class="stat-icon">🌧️</span><span class="stat-val" id="rain-prob-val">0%</span><span class="stat-lbl">Rain Chance</span></div>
         <div class="stat-badge"><span class="stat-icon">💧</span><span class="stat-val" id="humidity-val">72%</span><span class="stat-lbl">Humidity</span></div>
         <div class="stat-badge"><span class="stat-icon">💨</span><span class="stat-val" id="wind-val">34 km/h</span><span class="stat-lbl" id="wind-lbl">Moderate Wind</span></div>
+        <div class="stat-badge"><span class="stat-icon">🥶</span><span class="stat-val" id="windchill-val">—</span><span class="stat-lbl">Wind Chill</span></div>
         <div class="stat-badge"><span class="stat-icon">☀️</span><span class="stat-val" id="uv-val">3</span><span class="stat-lbl">UV Index</span></div>
-        <div class="stat-badge stat-badge-btn" onclick="openCalendar()"><span class="stat-icon">📅</span><span class="stat-val">—</span><span class="stat-lbl">Calendar</span></div>
       </div>
     </div>
 
@@ -512,32 +567,19 @@
 
     <!-- Period Picker -->
     <div id="period-panel">
-      <div class="section-lbl">SELECT YOUR TIME OUT</div>
+      <div class="section-lbl">SELECT THE TIME(S) FOR YOUR OUTING</div>
       <div class="periods-grid" id="periods-grid"></div>
     </div>
 
     <!-- Slider Panel -->
     <div id="slider-panel" style="display:none">
       <div class="slider-card">
-        <div class="section-lbl">DRAG TO SET YOUR TIME RANGE</div>
-        <div class="slider-display">
-          <div class="slider-badge">
-            <div class="slider-badge-lbl">LEAVING</div>
-            <div class="slider-badge-val" id="slider-start-lbl">8 AM</div>
-          </div>
-          <div class="slider-arrow">→</div>
-          <div class="slider-badge">
-            <div class="slider-badge-lbl">BACK BY</div>
-            <div class="slider-badge-val" id="slider-end-lbl">6 PM</div>
-          </div>
-        </div>
-        <div class="slider-sub">Start Time</div>
-        <div class="range-wrap">
-          <input type="range" class="start-slider" id="start-slider" min="0" max="23" value="8" oninput="updateSlider()">
-        </div>
-        <div class="slider-sub">End Time</div>
-        <div class="range-wrap">
-          <input type="range" class="end-slider" id="end-slider" min="1" max="24" value="18" oninput="updateSlider()">
+        <div class="dual-range-wrap" id="dual-range-wrap">
+          <div class="knob-label" id="start-knob-label" style="left:33.3%">8 AM</div>
+          <div class="knob-label" id="end-knob-label"   style="left:75%">6 PM</div>
+          <div class="dual-range-track"><div class="dual-range-fill" id="dual-range-fill"></div></div>
+          <input type="range" id="start-slider" min="0" max="23" value="8" oninput="updateSlider()">
+          <input type="range" id="end-slider"   min="1" max="24" value="18" oninput="updateSlider()">
         </div>
         <div class="slider-ticks">
           <span class="slider-tick">12 AM</span>
@@ -570,13 +612,16 @@
     <div class="filter-pills" id="filter-pills"></div>
     <div id="tips-list"></div>
     <div class="reset-row">
+      <button class="export-btn" onclick="exportTips()">⬇ Export Tips</button>
+      <button class="export-btn" onclick="importTips()">⬆ Import Tips</button>
       <button class="reset-btn" onclick="resetTips()">↺ Reset to Defaults</button>
     </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
     <div style="height:20px"></div>
   </div>
 
   <!-- FAB (admin screen only) -->
-  <button class="fab" id="fab" onclick="openModal(null)" style="display:none">
+  <button class="fab" id="fab" onclick="openModal(null, filterCat)" style="display:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
 
@@ -584,7 +629,7 @@
   <nav class="nav">
     <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-      Today
+      Home
     </button>
     <button class="nav-btn" id="nav-admin" onclick="showScreen('admin')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -618,6 +663,10 @@
           <div class="epicker-grid" id="epicker-grid"></div>
         </div>
         <textarea class="input textarea" id="f-suggestion" placeholder="Suggestion shown to the user…"></textarea>
+        <div class="cond-toggle-row" style="margin-top:12px">
+          <span class="cond-toggle-lbl">⚠️ Mark as important warning</span>
+          <label class="toggle"><input type="checkbox" id="f-warning"><span class="toggle-slider"></span></label>
+        </div>
       </div>
 
       <!-- Category -->
@@ -686,7 +735,7 @@
           <div class="hint">Show tip when chance of rain is at least:</div>
           <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
             <input type="range" id="rainprob-val" min="0" max="100" step="5" value="40"
-              oninput="document.getElementById('rainprob-display').textContent=this.value+'%'"
+              oninput="this.dataset.userSet='1';document.getElementById('rainprob-display').textContent=this.value+'%'"
               style="flex:1;accent-color:var(--accent)">
             <span id="rainprob-display" style="color:var(--text);font-weight:700;min-width:36px">40%</span>
           </div>
@@ -925,12 +974,6 @@ async function fetchWeather(lat, lon) {
   setWeatherError(null);
   ALL_DAYS = null;
 
-  // Open-Meteo: 14 days past + 16 days future = 30-day window
-  const today    = new Date();
-  const pastDate = new Date(today); pastDate.setDate(today.getDate() - TODAY_IDX);
-  const futDate  = new Date(today); futDate.setDate(today.getDate() + (30 - TODAY_IDX - 1));
-
-  const fmt = d => d.toISOString().slice(0,10);
   const vars = [
     'temperature_2m',
     'apparent_temperature',
@@ -942,27 +985,47 @@ async function fetchWeather(lat, lon) {
     'weather_code',
   ].join(',');
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+  const params = `?latitude=${lat}&longitude=${lon}` +
     `&hourly=${vars}` +
-    `&start_date=${fmt(pastDate)}&end_date=${fmt(futDate)}` +
+    `&past_days=${TODAY_IDX}&forecast_days=${30 - TODAY_IDX}` +
     `&wind_speed_unit=kmh&timezone=auto`;
 
-  try {
-    const res  = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+  // Try multiple endpoints in case one is blocked
+  const endpoints = [
+    `https://api.open-meteo.com/v1/forecast${params}`,
+    `https://historical-forecast-api.open-meteo.com/v1/forecast${params}`,
+  ];
+
+  let json = null, lastErr = null;
+  for (const url of endpoints) {
+    if (json) break;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        json = await res.json();
+        break;
+      } catch(err) {
+        lastErr = err;
+        console.warn(`Fetch failed (${url.slice(8,30)}, attempt ${attempt}):`, err.message);
+        if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+  }
+
+  if (json) {
     ALL_DAYS = parseOpenMeteo(json);
+    setWeatherError(null);
     setWeatherLoading(false);
     renderHome();
-    // refresh calendar if open
     if (document.getElementById('cal-overlay').classList.contains('open')) renderCalendar();
-  } catch(err) {
-    console.error('Open-Meteo fetch failed:', err);
-    setWeatherError('Could not load weather — showing estimated data');
-    // build a simple fallback so the app still works
-    ALL_DAYS = Array.from({length:30}, () => makeFallbackDay());
+  } else {
+    console.error('All fetch attempts failed:', lastErr);
+    const errMsg = lastErr ? (lastErr.name + ': ' + lastErr.message) : 'no error object';
     setWeatherLoading(false);
-    renderHome();
+    const errEl = document.getElementById('weather-error');
+    errEl.innerHTML = '⚠️ Weather unavailable (' + errMsg + ') &nbsp;<button onclick="fetchWeather(' + lat + ',' + lon + ')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,154,154,.4);color:#ff9a9a;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">Retry</button>';
+    errEl.style.display = 'block';
   }
 }
 
@@ -1059,11 +1122,17 @@ let tips = (() => {
 })();
 let unit = localStorage.getItem('ww_unit') || 'C';
 let mode = 'periods';
-let selectedPeriods = new Set(['morning']);
+let selectedPeriods = (() => {
+  const h = new Date().getHours();
+  if (h >= 6  && h < 12) return new Set(['morning']);
+  if (h >= 12 && h < 17) return new Set(['afternoon']);
+  if (h >= 17 && h < 21) return new Set(['evening']);
+  return new Set(['night']);
+})();
 let sliderStart = 8, sliderEnd = 18;
 let filterCat = 'all';
 let editingId = null;
-let formRainLevel = null, formWindLevel = null;
+let formRainLevel = null, formWindLevel = null; // each: null | {level, mode:'require'|'exclude'}
 let formTempOp = 'gt', formPriority = 5, formCategory = 'base';
 
 // Day browsing
@@ -1110,8 +1179,16 @@ function rainLevelMet(actual, required) {
 function windLevelMet(actual, required) {
   return WIND_ORDER.indexOf(actual) >= WIND_ORDER.indexOf(required);
 }
+function uvColor(uv) {
+  if (!uv || uv <= 2) return '#7ab3d4';
+  if (uv <= 4) return '#7ec8a0';
+  if (uv <= 6) return '#f5c077';
+  if (uv <= 8) return '#f09050';
+  return '#e05555';
+}
+
 function getRainLevel(mm) {
-  if (!mm || mm <= 0.1) return 'none';
+  if (!mm || mm < 0.2) return 'none';  // ignore trace amounts under 0.2mm/h
   if (mm < 1)  return 'drizzle';
   if (mm < 4)  return 'light';
   if (mm < 10) return 'moderate';
@@ -1124,7 +1201,10 @@ function getWindLevel(kmh) {
   if (kmh < 75) return 'strong';
   return 'storm';
 }
-function saveTips() { localStorage.setItem('ww_tips', JSON.stringify(tips)); }
+function saveTips() {
+  tips.sort((a, b) => b.priority - a.priority);
+  localStorage.setItem('ww_tips', JSON.stringify(tips));
+}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // WEATHER / AGGREGATION
@@ -1151,6 +1231,8 @@ function aggregate(slots) {
   const maxWind = Math.max(...slots.map(w=>w.wind));
   const maxRain     = Math.max(...slots.map(w=>w.rain));
   const maxRainProb = Math.max(...slots.map(w=>w.rainProb ?? 0));
+  // Only treat as rain if both mm and probability suggest it — avoids trace amount false positives
+  const effectiveRainMm = (maxRainProb >= 20) ? maxRain : 0;
   const minUV   = Math.min(...slots.map(w=>w.uv));
   const maxUV   = Math.max(...slots.map(w=>w.uv));
   return {
@@ -1163,9 +1245,9 @@ function aggregate(slots) {
     windSpeed: Math.round(maxWind),
     rainMm: maxRain,
     rainProb: maxRainProb,
-    uvIndex: maxUV,   // worst-case UV for tip matching
+    uvIndex: maxUV,
     uvLo: minUV, uvHi: maxUV,
-    rainLevel: getRainLevel(maxRain),
+    rainLevel: getRainLevel(effectiveRainMm),
     windLevel: getWindLevel(maxWind),
   };
 }
@@ -1207,10 +1289,13 @@ function tipMatches(weather, tip) {
       case 'windSpeed':return evalNumeric(weather.windSpeed, rule);
       case 'rain':
         if (rule.op === 'eq') return weather.rainLevel !== 'none';
+        if (rule.exclude) return !rainLevelMet(weather.rainLevel, rule.level);
         return rainLevelMet(weather.rainLevel, rule.level);
       case 'rainProb':
         return evalNumeric(weather.rainProb ?? 0, rule);
-      case 'wind':     return windLevelMet(weather.windLevel, rule.level);
+      case 'wind':
+        if (rule.exclude) return !windLevelMet(weather.windLevel, rule.level);
+        return windLevelMet(weather.windLevel, rule.level);
     }
     return true;
   });
@@ -1219,20 +1304,31 @@ function tipMatches(weather, tip) {
 function getApplicableTips(weather) {
   const applicable = tips.filter(t => tipMatches(weather, t));
   const seen = new Set();
-  const result = [];
-  // style + materials always show all matches
+  const bycat = {};
   const alwaysAll = new Set(['style','materials']);
-  applicable.sort((a,b)=>b.priority-a.priority).forEach(tip => {
+
+  // Pick winners per category (highest priority wins)
+  applicable.sort((a,b) => b.priority - a.priority).forEach(tip => {
     const cat = tip.category;
     if (alwaysAll.has(cat)) {
-      result.push(tip);
-    } else if (ACC_SUBCATS.has(cat)) {
-      // acc subcategories: one per subcat (acc:head, acc:neck, acc:face, acc:foot)
-      if (!seen.has(cat)) { seen.add(cat); result.push(tip); }
-    } else {
-      // all other categories: one winner per category
-      if (!seen.has(cat)) { seen.add(cat); result.push(tip); }
+      if (!bycat[cat]) bycat[cat] = [];
+      bycat[cat].push(tip);
+    } else if (!seen.has(cat)) {
+      seen.add(cat);
+      bycat[cat] = [tip];
     }
+  });
+
+  // Return in logical display order
+  const DISPLAY_ORDER = ["outerwear","midlayer","top","bottom","base","footwear",
+    "acc:head","acc:neck","acc:face","acc:foot","acc:hand","materials","style"];
+  const result = [];
+  DISPLAY_ORDER.forEach(cat => {
+    if (bycat[cat]) result.push(...bycat[cat]);
+  });
+  // catch any categories not in the order list
+  Object.keys(bycat).forEach(cat => {
+    if (!DISPLAY_ORDER.includes(cat)) result.push(...bycat[cat]);
   });
   return result;
 }
@@ -1259,18 +1355,17 @@ function renderPeriodCards(day) {
       <div class="period-card ${p.key}${isActive ? ' active' : ''}" onclick="togglePeriod('${p.key}', this)">
         <div class="period-emoji">${p.emoji}</div>
         <div class="period-header">
-          <div>
-            <div class="period-name">${p.label}</div>
-            <div class="period-hours">${p.hours}</div>
-          </div>
-          ${tempHtml}
+          <div class="period-name">${p.label}</div>
+          <div class="period-hours">${p.hours}</div>
         </div>
+        ${tempHtml}
         <div class="check-dot">✓</div>
       </div>`;
   }).join('');
 }
 
 function renderHome() {
+  if (!ALL_DAYS) return; // wait for weather data before rendering
   // Date label + live clock
   const todayDate = new Date();
   todayDate.setDate(todayDate.getDate() + dayOffset);
@@ -1304,23 +1399,33 @@ function renderHome() {
   const hiTemp = Math.max(...dayTemps);
   const wx = wmoToWeather(now.wcode ?? 0);
   document.getElementById('big-temp').innerHTML = `${displayTemp(now.temp)}<sup>${unitLabel()}</sup>`;
-  document.getElementById('temp-range').innerHTML =
-    `<span class="lo">↓${displayTemp(loTemp)}°</span> <span class="hi">↑${displayTemp(hiTemp)}°</span>`;
+  document.getElementById('hero-lo').textContent = `↓${displayTemp(loTemp)}°`;
+  document.getElementById('hero-hi').textContent = `↑${displayTemp(hiTemp)}°`;
   document.getElementById('feels-like').textContent = `Feels like ${displayTemp(now.feelsLike ?? now.temp - 3)}${unitLabel()}`;
   document.getElementById('weather-desc').textContent = wx.desc;
   document.getElementById('weather-emoji').textContent = wx.emoji;
-  document.getElementById('rain-prob-val').textContent = `${now.rainProb ?? 0}%`;
-  document.getElementById('humidity-val').textContent = `${now.hum}%`;
-  document.getElementById('wind-val').textContent = `${now.wind} km/h`;
-  const windLevelNow = WIND_LEVELS.find(w => w.key === getWindLevel(now.wind));
-  document.getElementById('wind-lbl').textContent = windLevelNow ? windLevelNow.label : 'Wind';
-  document.getElementById('uv-val').textContent = now.uv;
   document.getElementById('unit-c').classList.toggle('active', unit === 'C');
   document.getElementById('unit-f').classList.toggle('active', unit === 'F');
 
-  // Aggregate
+  // Aggregate selected slots — use these for all stats so they reflect the outing window
   const slots = getSlots();
   const agg = aggregate(slots.length ? slots : day);
+
+  // Stats — current hour only (outing aggregation is shown in Conditions card below)
+  document.getElementById('rain-prob-val').textContent = `${now.rainProb ?? 0}%`;
+  document.getElementById('humidity-val').textContent = `${Math.round(now.hum ?? 0)}%`;
+  document.getElementById('wind-val').textContent = `${now.wind ?? 0} km/h`;
+  const windLevelNow = WIND_LEVELS.find(w => w.key === getWindLevel(now.wind ?? 0));
+  document.getElementById('wind-lbl').textContent = windLevelNow ? windLevelNow.label : 'Wind';
+  document.getElementById('uv-val').textContent = now.uv ?? 0;
+  // Wind chill uses current temp + current wind
+  const wcTemp = now.temp, wcWind = now.wind ?? 0;
+  let windChillStr = '—';
+  if (wcWind >= 5) {
+    const wc = 13.12 + 0.6215*wcTemp - 11.37*Math.pow(wcWind,0.16) + 0.3965*wcTemp*Math.pow(wcWind,0.16);
+    windChillStr = displayTemp(Math.round(wc)) + unitLabel();
+  }
+  document.getElementById('windchill-val').textContent = windChillStr;
 
   // Agg row
   const aggRow = document.getElementById('agg-row');
@@ -1328,8 +1433,8 @@ function renderHome() {
     ? `<span class="agg-lo">${displayTemp(agg.tempLo)}°</span><span class="agg-sep"> – </span><span class="agg-hi">${displayTemp(agg.tempHi)}°</span>`
     : `${displayTemp(agg.tempLo ?? agg.temp)}${unitLabel()}`;
   const uvRangeStr = agg.uvLo !== undefined && agg.uvHi !== agg.uvLo
-    ? `<span class="agg-lo">${agg.uvLo}</span><span class="agg-sep"> – </span><span class="agg-hi">${agg.uvHi}</span>`
-    : `${agg.uvHi ?? agg.uvIndex}`;
+    ? `<span class="agg-lo">${agg.uvLo}</span><span class="agg-sep"> – </span><span style="font-weight:700;color:${uvColor(agg.uvHi)}">${agg.uvHi}</span>`
+    : `<span style="font-weight:700;color:${uvColor(agg.uvHi ?? agg.uvIndex)}">${agg.uvHi ?? agg.uvIndex}</span>`;
   aggRow.innerHTML = `
     <div class="agg-stat">
       <div class="agg-stat-emoji">🌡️</div>
@@ -1360,33 +1465,30 @@ function renderHome() {
   if (!sugg.length) {
     list.innerHTML = `<div class="no-tips"><div class="no-tips-emoji">👕</div><div class="no-tips-text">Conditions look comfortable — dress as you normally would!</div></div>`;
   } else {
-    // Group acc subcategories together under one header
-    const ACC_GROUP_LABEL = "Accessories";
-    let html = '';
-    let accGroupOpen = false;
-    let delay = 0;
-    sugg.forEach(t => {
-      const isAcc = ACC_SUBCATS.has(t.category);
-      if (isAcc && !accGroupOpen) {
-        html += `<div class="group-header">👜 Accessories</div>`;
-        accGroupOpen = true;
-      } else if (!isAcc) {
-        accGroupOpen = false;
-      }
-      html += `
-        <div class="tip-card${isAcc?' tip-card-acc':''}" style="animation-delay:${delay*0.05}s" onclick="toggleTipExpand(event,this)">
-          <div class="tip-emoji">${renderIcon(t.emoji,36)}</div>
-          <div class="tip-body">
-            <div class="tip-label-row">
-              <div class="tip-label">${t.label}</div>
-              <span class="tip-chevron">▼</span>
-            </div>
-            <span class="tip-cat">${CAT_LABELS[t.category]||t.category}</span>
-            <div class="tip-text">${t.suggestion}</div>
+    // Split into main tips and acc subcategory tips, render separately with a header
+    const mainTips = sugg.filter(t => !ACC_SUBCATS.has(t.category));
+    const accTips  = sugg.filter(t =>  ACC_SUBCATS.has(t.category));
+
+    const renderTip = (t, delay, isAcc) => `
+      <div class="tip-card${isAcc ? ' tip-card-acc' : ''}" style="animation-delay:${delay*0.05}s" onclick="toggleTipExpand(event,this)">
+        <div class="tip-emoji">${renderIcon(t.emoji, 24)}</div>
+        <div class="tip-body">
+          <div class="tip-label-row">
+            <div class="tip-label">${t.warning ? '<span style="margin-right:4px">⚠️</span>' : ''}${t.label}</div>
+            <span class="tip-chevron">▼</span>
           </div>
-        </div>`;
-      delay++;
-    });
+          <span class="tip-cat">${CAT_LABELS[t.category] || t.category}</span>
+          <div class="tip-text">${t.suggestion}</div>
+        </div>
+      </div>`;
+
+    let html = mainTips.map((t, i) => renderTip(t, i, false)).join('');
+
+    if (accTips.length) {
+      html += `<div class="group-header">👜 Accessories</div>`;
+      html += accTips.map((t, i) => renderTip(t, mainTips.length + i, true)).join('');
+    }
+
     list.innerHTML = html;
   }
 }
@@ -1430,6 +1532,9 @@ function renderAdmin() {
           </div>
         </div>
         <div class="tip-row-actions">
+          <button class="icon-btn" onclick="event.stopPropagation();duplicateTip('${tip.id}')" title="Duplicate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
           <button class="icon-btn" onclick="event.stopPropagation();openModal('${tip.id}')" title="Edit">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           </button>
@@ -1449,8 +1554,8 @@ function renderAdmin() {
 
 function condSummary(tip) {
   return Object.entries(tip.conditions).map(([k,v])=>{
-    if (k==='rain') { const rl=RAIN_LEVELS.find(r=>r.key===(v.level||'drizzle')); return `🌧️ Rain ≥ ${rl?.label||v.level}`; }
-    if (k==='wind') { const wl=WIND_LEVELS.find(w=>w.key===(v.level||'light')); return `💨 Wind ≥ ${wl?.label||v.level}`; }
+    if (k==='rain') { const rl=RAIN_LEVELS.find(r=>r.key===(v.level||'drizzle')); return v.exclude ? `⊘ Rain < ${rl?.label||v.level}` : `🌧️ Rain ≥ ${rl?.label||v.level}`; }
+    if (k==='wind') { const wl=WIND_LEVELS.find(w=>w.key===(v.level||'light')); return v.exclude ? `⊘ Wind < ${wl?.label||v.level}` : `💨 Wind ≥ ${wl?.label||v.level}`; }
     if (k==='temp') {
       const show = (c)=>`${displayTemp(c)}${unitLabel()}`;
       if (v.op==='range') return `🌡️ Temp between ${show(v.min)} – ${show(v.max)}`;
@@ -1750,13 +1855,41 @@ function togglePeriod(name) {
   renderHome();
 }
 
+function trackColorAt(hour) {
+  // Matches gradient: 0h dark blue → 6h mid blue → 12h yellow → 18h purple → 24h dark blue
+  const stops = [
+    { h:  0, r: 122, g: 179, b: 212 },  // #7ab3d4 light blue
+    { h: 12, r: 245, g: 192, b: 119 },  // #f5c077 yellow
+    { h: 24, r: 122, g: 179, b: 212 },  // #7ab3d4 light blue
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i], b = stops[i+1];
+    if (hour >= a.h && hour <= b.h) {
+      const t = (hour - a.h) / (b.h - a.h);
+      const r = Math.round(a.r + t*(b.r - a.r));
+      const g = Math.round(a.g + t*(b.g - a.g));
+      const bv = Math.round(a.b + t*(b.b - a.b));
+      return `rgb(${r},${g},${bv})`;
+    }
+  }
+  return '#1a4a8a';
+}
+
 function updateSlider() {
   let s = parseInt(document.getElementById('start-slider').value);
   let e = parseInt(document.getElementById('end-slider').value);
   if (s >= e) { if (document.activeElement === document.getElementById('start-slider')) { s = e-1; document.getElementById('start-slider').value=s; } else { e=s+1; document.getElementById('end-slider').value=e; } }
+
   sliderStart=s; sliderEnd=e;
-  document.getElementById('slider-start-lbl').textContent = hourLabel(s);
-  document.getElementById('slider-end-lbl').textContent   = hourLabel(e);
+  const root = document.documentElement;
+  root.style.setProperty('--start-knob-color', trackColorAt(s));
+  root.style.setProperty('--end-knob-color',   trackColorAt(e));
+  // Update knob label positions and text
+  const startLbl = document.getElementById('start-knob-label');
+  const endLbl   = document.getElementById('end-knob-label');
+  if (startLbl) { startLbl.style.left = (s/24*100)+'%'; startLbl.textContent = hourLabel(s); }
+  if (endLbl)   { endLbl.style.left   = (e/24*100)+'%'; endLbl.textContent   = hourLabel(e); }
+
   renderHome();
 }
 
@@ -1765,11 +1898,60 @@ function toggleExpand(id) {
   const el = document.getElementById('exp-'+id);
   el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
+function duplicateTip(id) {
+  const src = tips.find(t => t.id === id);
+  if (!src) return;
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = 't' + Date.now();
+  copy.label = copy.label + ' (1)';
+  tips.push(copy);
+  saveTips();
+  renderAdmin();
+}
+
 function deleteTipById(id) {
   if (!confirm('Delete this tip?')) return;
   tips = tips.filter(t=>t.id!==id);
   saveTips(); renderAdmin();
 }
+function exportTips() {
+  const blob = new Blob([JSON.stringify(tips, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'wearwise-tips.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importTips() {
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-file').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Not an array');
+      // Merge: imported tips override existing ones by id, new ones are appended
+      const existingById = Object.fromEntries(tips.map(t => [t.id, t]));
+      imported.forEach(t => { existingById[t.id] = t; });
+      tips = Object.values(existingById);
+      saveTips();
+      renderAdmin();
+      renderHome();
+      alert(`✓ Imported ${imported.length} tip${imported.length!==1?'s':''}. Your tips have been merged.`);
+    } catch(err) {
+      alert('Import failed — make sure you selected a valid WearWise tips JSON file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
 function resetTips() {
   if (!confirm('Reset ALL tips to defaults? This cannot be undone.')) return;
   tips = JSON.parse(JSON.stringify(DEFAULT_TIPS));
@@ -1792,26 +1974,19 @@ function buildModal(tip) {
   `).join('');
 
   // Rain levels
-  const currentRain = tip?.conditions?.rain?.level || formRainLevel;
-  document.getElementById('rain-levels').innerHTML = RAIN_LEVELS.map(r=>`
-    <div class="level-row${currentRain===r.key?' rain-active':''}" id="rain-row-${r.key}" onclick="selectRain('${r.key}')">
-      <span class="level-row-emoji">${r.emoji}</span>
-      <div class="level-row-info"><div class="level-row-name">${r.label}</div><div class="level-row-sub">${r.sub}</div></div>
-      <span class="level-check">✓</span>
-    </div>
-  `).join('');
-  document.getElementById('rain-clear').style.display = currentRain ? 'block' : 'none';
+  // Restore rain state from tip or form state
+  if (tip?.conditions?.rain) {
+    const r = tip.conditions.rain;
+    formRainLevel = { level: r.level, mode: r.exclude ? 'exclude' : 'require' };
+  }
+  buildLevelRows('rain', RAIN_LEVELS, formRainLevel);
 
-  // Wind levels
-  const currentWind = tip?.conditions?.wind?.level || formWindLevel;
-  document.getElementById('wind-levels').innerHTML = WIND_LEVELS.map(w=>`
-    <div class="level-row${currentWind===w.key?' wind-active':''}" id="wind-row-${w.key}" onclick="selectWind('${w.key}')">
-      <span class="level-row-emoji">${w.emoji}</span>
-      <div class="level-row-info"><div class="level-row-name">${w.label}</div><div class="level-row-sub">${w.sub}</div></div>
-      <span class="level-check">✓</span>
-    </div>
-  `).join('');
-  document.getElementById('wind-clear').style.display = currentWind ? 'block' : 'none';
+  // Restore wind state from tip or form state
+  if (tip?.conditions?.wind) {
+    const w = tip.conditions.wind;
+    formWindLevel = { level: w.level, mode: w.exclude ? 'exclude' : 'require' };
+  }
+  buildLevelRows('wind', WIND_LEVELS, formWindLevel);
 
   // Temp condition
   const tempCond = tip?.conditions?.temp;
@@ -1857,10 +2032,11 @@ function buildOpRows() {
 
 function buildTempInputs(existing) {
   const ph = unit==='F' ? 32 : 0;
+  const defaultTemp = unit === 'F' ? 32 : 0;
   const existVal = (existing?.value !== undefined && !isNaN(existing.value))
     ? displayTemp(existing.value)
-    : (existing?.min !== undefined && !isNaN(existing.min)) ? displayTemp(existing.min) : '';
-  const existMax = (existing?.max !== undefined && !isNaN(existing.max)) ? displayTemp(existing.max) : '';
+    : (existing?.min !== undefined && !isNaN(existing.min)) ? displayTemp(existing.min) : defaultTemp;
+  const existMax = (existing?.max !== undefined && !isNaN(existing.max)) ? displayTemp(existing.max) : defaultTemp;
   const u = unitLabel();
   if (formTempOp==='range') {
     document.getElementById('temp-inputs').innerHTML = `
@@ -1889,26 +2065,65 @@ function selectOp(op) {
 }
 function selectCat(cat, el) { formCategory=cat; document.querySelectorAll('#cat-chips .chip').forEach(c=>c.classList.remove('active')); el.classList.add('active'); }
 function selectPri(n, el) { formPriority=n; document.querySelectorAll('#pri-chips .chip').forEach(c=>{c.classList.remove('pri-active');c.style.background='';c.style.borderColor='';c.style.color='';}); el.classList.add('pri-active'); el.style.background='var(--warm)'; el.style.borderColor='var(--warm)'; el.style.color='#000'; }
-function selectRain(key) {
-  formRainLevel = formRainLevel===key ? null : key;
-  document.querySelectorAll('[id^="rain-row-"]').forEach(el=>{ el.classList.remove('rain-active'); });
-  if (formRainLevel) document.getElementById('rain-row-'+formRainLevel)?.classList.add('rain-active');
-  document.getElementById('rain-clear').style.display = formRainLevel ? 'block' : 'none';
+// Build level rows (shared for rain + wind)
+function buildLevelRows(type, levels, current) {
+  const el = document.getElementById(type + '-levels');
+  const clearEl = document.getElementById(type + '-clear');
+  el.innerHTML = levels.map(lv => {
+    const isReq = current?.level === lv.key && current?.mode === 'require';
+    const isExc = current?.level === lv.key && current?.mode === 'exclude';
+    const rowCls = isReq ? ` ${type}-require` : isExc ? ` ${type}-exclude` : '';
+    return `
+    <div class="level-row${rowCls}" id="${type}-row-${lv.key}">
+      <span class="level-row-emoji">${lv.emoji}</span>
+      <div class="level-row-info">
+        <div class="level-row-name">${lv.label}</div>
+        <div class="level-row-sub">${lv.sub}</div>
+      </div>
+      <div class="level-btns">
+        <button class="level-btn${isReq ? ' yes-active' : ''}" onclick="setLevel('${type}','${lv.key}','require')" title="Show when at least this">✓</button>
+        <button class="level-btn${isExc ? ' no-active' : ''}" onclick="setLevel('${type}','${lv.key}','exclude')" title="Hide when at least this">⊘</button>
+      </div>
+    </div>`;
+  }).join('');
+  clearEl.style.display = current ? 'block' : 'none';
 }
-function selectWind(key) {
-  formWindLevel = formWindLevel===key ? null : key;
-  document.querySelectorAll('[id^="wind-row-"]').forEach(el=>{ el.classList.remove('wind-active'); });
-  if (formWindLevel) document.getElementById('wind-row-'+formWindLevel)?.classList.add('wind-active');
-  document.getElementById('wind-clear').style.display = formWindLevel ? 'block' : 'none';
-}
-function clearRain() { formRainLevel=null; selectRain(null); }
-function clearWind() { formWindLevel=null; selectWind(null); }
-function toggleTempCond() { document.getElementById('temp-cond-body').style.display = document.getElementById('temp-enabled').checked ? 'block' : 'none'; }
-function toggleHumCond()  { document.getElementById('hum-cond-body').style.display  = document.getElementById('hum-enabled').checked  ? 'block' : 'none'; }
-function toggleUvCond()   { document.getElementById('uv-cond-body').style.display   = document.getElementById('uv-enabled').checked   ? 'block' : 'none'; }
-function toggleRainProbCond() { document.getElementById('rainprob-cond-body').style.display = document.getElementById('rainprob-enabled').checked ? 'block' : 'none'; }
 
-function openModal(id) {
+function setLevel(type, key, mode) {
+  const current = type === 'rain' ? formRainLevel : formWindLevel;
+  // Toggle off if clicking the already-active button for this row
+  const newVal = (current?.level === key && current?.mode === mode) ? null : { level: key, mode };
+  if (type === 'rain') formRainLevel = newVal;
+  else formWindLevel = newVal;
+  const levels = type === 'rain' ? RAIN_LEVELS : WIND_LEVELS;
+  buildLevelRows(type, levels, newVal);
+}
+
+function clearRain() { formRainLevel = null; buildLevelRows('rain', RAIN_LEVELS, null); }
+function clearWind() { formWindLevel = null; buildLevelRows('wind', WIND_LEVELS, null); }
+function toggleTempCond() { document.getElementById('temp-cond-body').style.display = document.getElementById('temp-enabled').checked ? 'block' : 'none'; }
+function toggleHumCond() {
+  const on = document.getElementById('hum-enabled').checked;
+  document.getElementById('hum-cond-body').style.display = on ? 'block' : 'none';
+  if (on) { const el = document.getElementById('hum-val'); if (!el.value) el.value = 50; }
+}
+function toggleUvCond() {
+  const on = document.getElementById('uv-enabled').checked;
+  document.getElementById('uv-cond-body').style.display = on ? 'block' : 'none';
+  if (on) { const el = document.getElementById('uv-val'); if (!el.value) el.value = 7; }
+}
+function toggleRainProbCond() {
+  const on = document.getElementById('rainprob-enabled').checked;
+  document.getElementById('rainprob-cond-body').style.display = on ? 'block' : 'none';
+  if (on) {
+    const sl = document.getElementById('rainprob-val');
+    const disp = document.getElementById('rainprob-display');
+    // Only set default if it's still on the initial value of 40 (i.e. not user-set from an existing tip)
+    if (!sl.dataset.userSet) { sl.value = 30; disp.textContent = '30%'; }
+  }
+}
+
+function openModal(id, defaultCat) {
   editingId = id;
   const tip = id ? tips.find(t=>t.id===id) : null;
   document.getElementById('modal-title').textContent = id ? 'Edit Tip' : 'New Tip';
@@ -1919,7 +2134,8 @@ function openModal(id) {
   closeEmojiPicker();
   document.getElementById('f-label').value      = tip?.label      || '';
   document.getElementById('f-suggestion').value = tip?.suggestion || '';
-  formCategory   = tip?.category  || 'base';
+  document.getElementById('f-warning').checked = tip?.warning || false;
+  formCategory   = tip?.category  || (defaultCat && defaultCat !== 'all' ? defaultCat : 'base');
   formPriority   = tip?.priority  || 5;
   formRainLevel  = tip?.conditions?.rain?.level  || null;
   formWindLevel  = tip?.conditions?.wind?.level  || null;
@@ -1933,11 +2149,12 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 function saveTip() {
   const label = document.getElementById('f-label').value.trim();
   const suggestion = document.getElementById('f-suggestion').value.trim();
+  const warning = document.getElementById('f-warning').checked;
   if (!label) return alert('Please enter a tip title.');
 
   const conditions = {};
-  if (formRainLevel) conditions.rain = {op:'gte', level:formRainLevel};
-  if (formWindLevel) conditions.wind = {op:'gte', level:formWindLevel};
+  if (formRainLevel) conditions.rain = { op:'gte', level: formRainLevel.level, exclude: formRainLevel.mode === 'exclude' };
+  if (formWindLevel) conditions.wind = { op:'gte', level: formWindLevel.level, exclude: formWindLevel.mode === 'exclude' };
 
   // Temp
   if (document.getElementById('temp-enabled').checked) {
@@ -1970,7 +2187,7 @@ function saveTip() {
 
   const payload = {
     label, suggestion, emoji: selectedEmoji || '👕',
-    category: formCategory, priority: formPriority, conditions,
+    category: formCategory, priority: formPriority, warning, conditions,
   };
 
   if (editingId) {
@@ -1985,6 +2202,17 @@ function saveTip() {
 // INIT
 // ══════════════════════════════════════════════════════════════════════════════
 document.getElementById('city-text').textContent = currentCity;
+
+// Init slider knob colours to match starting positions
+(function() {
+  const root = document.documentElement;
+  root.style.setProperty('--start-knob-color', trackColorAt(sliderStart));
+  root.style.setProperty('--end-knob-color',   trackColorAt(sliderEnd));
+  const startLbl = document.getElementById('start-knob-label');
+  const endLbl   = document.getElementById('end-knob-label');
+  if (startLbl) { startLbl.style.left = (sliderStart/24*100)+'%'; startLbl.textContent = hourLabel(sliderStart); }
+  if (endLbl)   { endLbl.style.left   = (sliderEnd/24*100)+'%';   endLbl.textContent   = hourLabel(sliderEnd); }
+})();
 
 // Fetch real weather on startup
 // Always derive coords fresh from CITY_DB to avoid stale cached values
