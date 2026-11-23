@@ -1,3 +1,5 @@
+
+100%
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -375,7 +377,8 @@
     justify-content: center; border-radius: 8px; cursor: pointer; transition: background .1s;
     border: 2px solid transparent; }
   .epicker-custom { color: var(--text); }
-  .epicker-custom svg { width: 22px; height: 22px; }
+  .epicker-custom svg { width: 30px; height: 30px; }
+  #emoji-preview svg { width: 28px; height: 28px; }
   .epicker-em:hover { background: var(--bg-card2); }
   .epicker-em.selected { border-color: var(--accent); background: var(--selected); }
 
@@ -781,16 +784,17 @@ const EMOJI_CATS = [
 
 // ── CUSTOM ICONS (SVG) ───────────────────────────────────────────────────────
 const CUSTOM_ICONS = {
-  "__beanie__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="5" r="3"/><path d="M5.5 21 C5.5 13 10 8.5 16 8.5 C22 8.5 26.5 13 26.5 21"/><rect x="3.5" y="21" width="25" height="6" rx="2"/><path d="M9 21 V27 M13 21 V27 M17 21 V27 M21 21 V27 M25 21 V27"/></svg>`,
-  "__stocking__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 H22 V18 L28 22 C30 23.5 29.5 28 26 28 H15 C13 28 12 26.5 12 25 Z"/><path d="M12 8 H22 M12 12 H22"/></svg>`,
-  "__legging__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="16" height="4" rx="1.5"/><path d="M8.5 7 L9.5 29 H14.5 L16 15 L17.5 29 H22.5 L23.5 7"/></svg>`,
+  "__beanie__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 1 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="5" r="3"/><path d="M5.5 21 C5.5 13 10 8.5 16 8.5 C22 8.5 26.5 13 26.5 21"/><rect x="3.5" y="21" width="25" height="6" rx="2"/><path d="M9 21 V27 M13 21 V27 M17 21 V27 M21 21 V27 M25 21 V27"/></svg>`,
+  "__stocking__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 1.5 24 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 H22 V18 L28 22 C30 23.5 29.5 28 26 28 H15 C13 28 12 26.5 12 25 Z"/><path d="M12 8 H22 M12 12 H22"/></svg>`,
+  "__legging__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 1.5 22 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="16" height="4" rx="1.5"/><path d="M8.5 7 L9.5 29 H14.5 L16 15 L17.5 29 H22.5 L23.5 7"/></svg>`,
   "__wool__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="10" r="5"/><circle cx="18" cy="7" r="5"/><circle cx="29" cy="10" r="5"/><circle cx="11" cy="20" r="5"/><circle cx="25" cy="20" r="5"/><path d="M2 14 Q7 24 11 25 Q18 28 25 25 Q29 24 34 14"/></svg>`,
 };
 
 function renderIcon(key, sizePx=32, color='currentColor') {
   if (!key) return '👕';
   if (CUSTOM_ICONS[key]) {
-    return `<span class="custom-icon" style="width:${sizePx}px;height:${sizePx}px;color:${color}">${CUSTOM_ICONS[key]}</span>`;
+    const s = Math.round(sizePx * (['__beanie__','__stocking__','__legging__'].includes(key) ? 1.35 : 1));
+    return `<span class="custom-icon" style="width:${s}px;height:${s}px;color:${color}">${CUSTOM_ICONS[key]}</span>`;
   }
   return key; // regular emoji
 }
