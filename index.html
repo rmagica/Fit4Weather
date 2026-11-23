@@ -225,7 +225,9 @@
   .admin-header { background: linear-gradient(135deg,#0f2744,#0c1520); padding: 20px 16px 16px; margin: -16px -16px 16px; }
   .admin-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--text); }
   .admin-sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
-  .filter-pills { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 4px; margin-bottom: 14px; }
+  .filter-pills { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+  .filter-row { display: flex; gap: 5px; }
+  .filter-row .pill { flex: 1; text-align: center; font-size: 10px; padding: 5px 3px; min-width: 0; }
   .pill { padding: 5px 14px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border);
     color: var(--muted); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap;
     transition: all .2s; }
@@ -766,7 +768,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 const EMOJI_CATS = [
-  { label: "Clothing", emojis: ["👕","👖","🧥","🧣","🧤","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","🧳","👒","🎩","🪖","⛑️","👑","💍","👓","🕶️","🥽","🌂","☂️"] },
+  { label: "Clothing", custom: ["__beanie__","__stocking__","__legging__"], emojis: ["👕","👖","🧥","🧣","🧤","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","🧳","👒","🎩","🪖","⛑️","👑","💍","👓","🕶️","🥽","🌂","☂️"] },
   { label: "Weather", emojis: ["☀️","🌤️","⛅","🌥️","☁️","🌦️","🌧️","⛈️","🌩️","🌨️","❄️","🌬️","💨","🌫️","🌊","🌡️","🔥","💧","🌈","⚡","🌙","🌟","⭐","🌞","🌝"] },
   { label: "Footwear", emojis: ["👞","👟","🥾","🥿","👠","👡","👢","🩴","🩰"] },
   { label: "Accessories", emojis: ["💄","💅","💍","💎","👑","🎀","🪆","🧴","🪥","🧼","🪒","🧹","🪣","🧺","🪤","🛍️","🎁","🧲","🔑","🗝️","🔐","🔒","🔓"] },
@@ -779,6 +781,9 @@ const EMOJI_CATS = [
 
 // ── CUSTOM ICONS (SVG) ───────────────────────────────────────────────────────
 const CUSTOM_ICONS = {
+  "__beanie__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="5" r="3"/><path d="M5.5 21 C5.5 13 10 8.5 16 8.5 C22 8.5 26.5 13 26.5 21"/><rect x="3.5" y="21" width="25" height="6" rx="2"/><path d="M9 21 V27 M13 21 V27 M17 21 V27 M21 21 V27 M25 21 V27"/></svg>`,
+  "__stocking__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 H22 V18 L28 22 C30 23.5 29.5 28 26 28 H15 C13 28 12 26.5 12 25 Z"/><path d="M12 8 H22 M12 12 H22"/></svg>`,
+  "__legging__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="16" height="4" rx="1.5"/><path d="M8.5 7 L9.5 29 H14.5 L16 15 L17.5 29 H22.5 L23.5 7"/></svg>`,
   "__wool__": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="10" r="5"/><circle cx="18" cy="7" r="5"/><circle cx="29" cy="10" r="5"/><circle cx="11" cy="20" r="5"/><circle cx="25" cy="20" r="5"/><path d="M2 14 Q7 24 11 25 Q18 28 25 25 Q29 24 34 14"/></svg>`,
 };
 
@@ -803,7 +808,7 @@ function buildEmojiPicker() {
 
   const cat = EMOJI_CATS[currentEmojiCat];
   const customs = (cat.custom||[]).map(key => `
-    <div class="epicker-em epicker-custom${key===selectedEmoji?' selected':''}" onclick="pickEmoji('${key}')" title="wool">
+    <div class="epicker-em epicker-custom${key===selectedEmoji?' selected':''}" onclick="pickEmoji('${key}')" title="${key.replace(/_/g,'')}">
       ${CUSTOM_ICONS[key]||key}
     </div>`).join('');
   const regulars = cat.emojis.map(e => `
@@ -869,15 +874,28 @@ const WIND_LEVELS = [
 
 const RAIN_ORDER  = ["none","drizzle","light","moderate","heavy"];
 const WIND_ORDER  = ["calm","light","moderate","strong","storm"];
-const CATEGORIES  = ["outerwear","midlayer","top","bottom","base","acc:head","acc:neck","acc:face","acc:foot","acc:hand","footwear","materials","style"];
+const CATEGORIES  = [
+  "head","face","neck","hand",
+  "rain:wind","outer:top","mid:top","base:top",
+  "outer:bottom","mid:bottom","base:bottom",
+  "socks","footwear","bag","acc:other",
+  "materials","style"
+];
 const CAT_LABELS  = {
-  "outerwear":"Outerwear","midlayer":"Midlayer","base":"Base Layer",
-  "acc:head":"Head","acc:neck":"Neck","acc:face":"Face",
-  "acc:foot":"Foot Acc.","acc:hand":"Hand / Carry","footwear":"Footwear","materials":"Materials","style":"Style","midlayer":"Midlayer","top":"Top","bottom":"Bottom"
+  "head":"Head", "face":"Face", "neck":"Neck", "hand":"Hand",
+  "rain:wind":"Rain & Wind", "outer:top":"Outer Top", "mid:top":"Mid-layer Top", "base:top":"Base Top",
+  "outer:bottom":"Outer Bottom", "mid:bottom":"Mid Bottom", "base:bottom":"Base Bottom",
+  "socks":"Socks", "footwear":"Footwear", "bag":"Bag / Backpack", "acc:other":"Other Acc.",
+  "materials":"Materials", "style":"Style"
 };
-const FILTER_CATS = ["outerwear","midlayer","top","bottom","base","acc:head","acc:neck","acc:face","acc:foot","acc:hand","footwear","materials","style"];
-// Subcategories that each independently allow one tip
-const ACC_SUBCATS = new Set(["acc:head","acc:neck","acc:face","acc:foot","acc:hand"]);
+// Row layout for filter pills in admin (4 rows)
+const FILTER_ROW1 = ["head","face","neck","hand"];
+const FILTER_ROW2 = ["rain:wind","outer:top","mid:top","base:top"];
+const FILTER_ROW3 = ["outer:bottom","mid:bottom","base:bottom","socks"];
+const FILTER_ROW4 = ["footwear","bag","acc:other","materials","style"];
+const FILTER_CATS = [...FILTER_ROW1,...FILTER_ROW2,...FILTER_ROW3,...FILTER_ROW4];
+// Each of these allows one tip independently
+const ACC_SUBCATS = new Set(["head","face","neck","hand","bag","acc:other"]);
 
 // ── REAL WEATHER DATA — Open-Meteo (free, no API key) ────────────────────────
 // Fetches 16 days forecast + 14 days history for the selected city.
@@ -1052,52 +1070,52 @@ function getCityCoords() {
 }
 
 const DEFAULT_TIPS = [
-  {id:"t01",label:"Heavy Winter Coat",emoji:"🧥",category:"outerwear",suggestion:"Wear a heavy insulated winter coat — it's freezing out there.",conditions:{temp:{op:"lt",value:2}},priority:10},
-  {id:"t02",label:"Wool Hat",emoji:"🧢",category:"acc:head",suggestion:"Wear a warm wool hat — your head loses heat fast in the cold.",conditions:{temp:{op:"lt",value:5}},priority:9},
-  {id:"t02b",label:"Scarf",emoji:"🧣",category:"acc:neck",suggestion:"Wrap a scarf around your neck to keep the chill out.",conditions:{temp:{op:"lt",value:8}},priority:9},
-  {id:"t02c",label:"Gloves",emoji:"🧤",category:"acc:hand",suggestion:"Wear gloves — your hands will feel the cold fast.",conditions:{temp:{op:"lt",value:5}},priority:9},
-  {id:"t03",label:"Thermal Underlayer",emoji:"🩲",category:"base",suggestion:"Wear a thermal base layer under your clothes for insulation.",conditions:{temp:{op:"lt",value:5}},priority:8},
-  {id:"t03b",label:"Fleece Midlayer",emoji:"🫧",category:"midlayer",suggestion:"Add a fleece or insulating midlayer between your base and outer shell.",conditions:{temp:{op:"range",min:2,max:12}},priority:8},
-  {id:"t03c",label:"Light Hoodie",emoji:"👘",category:"midlayer",suggestion:"A hoodie or sweatshirt makes a great midlayer for cool weather.",conditions:{temp:{op:"range",min:10,max:18}},priority:5},
-  {id:"t04",label:"Warm Jacket",emoji:"🧥",category:"outerwear",suggestion:"A warm jacket will keep you comfortable today.",conditions:{temp:{op:"range",min:5,max:12}},priority:7},
-  {id:"t05",label:"Long-Sleeve Shirt",emoji:"👕",category:"base",suggestion:"A long-sleeve shirt is the right base layer for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:5},
-  {id:"t06",label:"Light Jacket",emoji:"🧥",category:"outerwear",suggestion:"Bring a light jacket for when the breeze picks up.",conditions:{temp:{op:"range",min:15,max:20}},priority:4},
-  {id:"t07",label:"T-Shirt & Jeans",emoji:"👖",category:"base",suggestion:"A t-shirt and jeans will be just right for today.",conditions:{temp:{op:"range",min:20,max:26}},priority:4},
-  {id:"t08",label:"Breathable Fabrics",emoji:"👗",category:"base",suggestion:"Wear light, breathable fabrics like linen or cotton to stay cool.",conditions:{temp:{op:"gt",value:26}},priority:6},
-  {id:"t09",label:"Shorts & Tank Top",emoji:"🩳",category:"base",suggestion:"Shorts and a tank top — keep it minimal in this heat.",conditions:{temp:{op:"gt",value:30}},priority:7},
-  {id:"t10",label:"Water-Resistant Layer",emoji:"🌦️",category:"outerwear",suggestion:"Just a drizzle — a water-resistant layer or light mac is enough.",conditions:{rain:{op:"gte",level:"drizzle"}},priority:5},
-  {id:"t11",label:"Umbrella",emoji:"☂️",category:"acc:hand",suggestion:"Light rain expected — pop an umbrella in your bag.",conditions:{rain:{op:"gte",level:"light"}},priority:7},
-  {id:"t12",label:"Waterproof Jacket",emoji:"🌧️",category:"outerwear",suggestion:"Moderate rain on the way — wear a proper waterproof jacket.",conditions:{rain:{op:"gte",level:"moderate"}},priority:8},
+  {id:"t01",label:"Heavy Winter Coat",emoji:"🧥",category:"outer:top",suggestion:"Wear a heavy insulated winter coat — it's freezing out there.",conditions:{temp:{op:"lt",value:2}},priority:10},
+  {id:"t02",label:"Wool Hat",emoji:"🧢",category:"head",suggestion:"Wear a warm wool hat — your head loses heat fast in the cold.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"t02b",label:"Scarf",emoji:"🧣",category:"neck",suggestion:"Wrap a scarf around your neck to keep the chill out.",conditions:{temp:{op:"lt",value:8}},priority:9},
+  {id:"t02c",label:"Gloves",emoji:"🧤",category:"hand",suggestion:"Wear gloves — your hands will feel the cold fast.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"t03",label:"Thermal Underlayer",emoji:"🩲",category:"base:top",suggestion:"Wear a thermal base layer under your clothes for insulation.",conditions:{temp:{op:"lt",value:5}},priority:8},
+  {id:"t03b",label:"Fleece Midlayer",emoji:"🫧",category:"mid:top",suggestion:"Add a fleece or insulating midlayer between your base and outer shell.",conditions:{temp:{op:"range",min:2,max:12}},priority:8},
+  {id:"t03c",label:"Light Hoodie",emoji:"👘",category:"mid:top",suggestion:"A hoodie or sweatshirt makes a great midlayer for cool weather.",conditions:{temp:{op:"range",min:10,max:18}},priority:5},
+  {id:"t04",label:"Warm Jacket",emoji:"🧥",category:"outer:top",suggestion:"A warm jacket will keep you comfortable today.",conditions:{temp:{op:"range",min:5,max:12}},priority:7},
+  {id:"t05",label:"Long-Sleeve Shirt",emoji:"👕",category:"base:top",suggestion:"A long-sleeve shirt is the right base layer for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:5},
+  {id:"t06",label:"Light Jacket",emoji:"🧥",category:"outer:top",suggestion:"Bring a light jacket for when the breeze picks up.",conditions:{temp:{op:"range",min:15,max:20}},priority:4},
+  {id:"t07",label:"T-Shirt & Jeans",emoji:"👖",category:"base:top",suggestion:"A t-shirt and jeans will be just right for today.",conditions:{temp:{op:"range",min:20,max:26}},priority:4},
+  {id:"t08",label:"Breathable Fabrics",emoji:"👗",category:"base:top",suggestion:"Wear light, breathable fabrics like linen or cotton to stay cool.",conditions:{temp:{op:"gt",value:26}},priority:6},
+  {id:"t09",label:"Shorts & Tank Top",emoji:"🩳",category:"base:top",suggestion:"Shorts and a tank top — keep it minimal in this heat.",conditions:{temp:{op:"gt",value:30}},priority:7},
+  {id:"t10",label:"Water-Resistant Layer",emoji:"🌦️",category:"rain:wind",suggestion:"Just a drizzle — a water-resistant layer or light mac is enough.",conditions:{rain:{op:"gte",level:"drizzle"}},priority:5},
+  {id:"t11",label:"Umbrella",emoji:"☂️",category:"hand",suggestion:"Light rain expected — pop an umbrella in your bag.",conditions:{rain:{op:"gte",level:"light"}},priority:7},
+  {id:"t12",label:"Waterproof Jacket",emoji:"🌧️",category:"rain:wind",suggestion:"Moderate rain on the way — wear a proper waterproof jacket.",conditions:{rain:{op:"gte",level:"moderate"}},priority:8},
   {id:"t13",label:"Waterproof Boots",emoji:"👢",category:"footwear",suggestion:"Moderate rain means puddles — waterproof boots will save you.",conditions:{rain:{op:"gte",level:"moderate"}},priority:7},
-  {id:"t14",label:"Full Rain Gear",emoji:"⛈️",category:"outerwear",suggestion:"Heavy rain incoming — full waterproof gear from head to toe.",conditions:{rain:{op:"gte",level:"heavy"}},priority:10},
-  {id:"t15",label:"Light Windbreaker",emoji:"🍃",category:"outerwear",suggestion:"It's breezy — a light windbreaker will keep you comfortable.",conditions:{wind:{op:"gte",level:"light"}},priority:4},
-  {id:"t16",label:"Windbreaker",emoji:"💨",category:"outerwear",suggestion:"Moderate wind today — a proper windbreaker makes a big difference.",conditions:{wind:{op:"gte",level:"moderate"}},priority:6},
+  {id:"t14",label:"Full Rain Gear",emoji:"⛈️",category:"rain:wind",suggestion:"Heavy rain incoming — full waterproof gear from head to toe.",conditions:{rain:{op:"gte",level:"heavy"}},priority:10},
+  {id:"t15",label:"Light Windbreaker",emoji:"🍃",category:"rain:wind",suggestion:"It's breezy — a light windbreaker will keep you comfortable.",conditions:{wind:{op:"gte",level:"light"}},priority:4},
+  {id:"t16",label:"Windbreaker",emoji:"💨",category:"rain:wind",suggestion:"Moderate wind today — a proper windbreaker makes a big difference.",conditions:{wind:{op:"gte",level:"moderate"}},priority:6},
   {id:"t17",label:"Avoid Loose Clothing",emoji:"🌬️",category:"style",suggestion:"Strong winds — avoid flowy or loose clothing today.",conditions:{wind:{op:"gte",level:"strong"}},priority:7},
-  {id:"t18",label:"Secure Your Hat",emoji:"🧢",category:"acc:head",suggestion:"Strong gusts predicted — skip loose hats or secure them well.",conditions:{wind:{op:"gte",level:"strong"}},priority:6},
+  {id:"t18",label:"Secure Your Hat",emoji:"🧢",category:"head",suggestion:"Strong gusts predicted — skip loose hats or secure them well.",conditions:{wind:{op:"gte",level:"strong"}},priority:6},
   {id:"t19",label:"Storm Warning",emoji:"🌪️",category:"style",suggestion:"Storm-force winds — if you must go out, wear fitted heavy clothing.",conditions:{wind:{op:"gte",level:"storm"}},priority:10},
-  {id:"t20",label:"Sunglasses",emoji:"🕶️",category:"acc:face",suggestion:"Bring sunglasses — it'll be bright and sunny.",conditions:{uvIndex:{op:"gte",value:4}},priority:5},
-  {id:"t21",label:"Sunscreen SPF 30+",emoji:"☀️",category:"acc:face",suggestion:"Apply SPF 30+ sunscreen — UV index is elevated today.",conditions:{uvIndex:{op:"gte",value:6}},priority:8},
-  {id:"t22",label:"Sun Hat",emoji:"👒",category:"acc:head",suggestion:"A wide-brimmed hat will shield you from strong UV today.",conditions:{uvIndex:{op:"gte",value:8}},priority:7},
-  {id:"t23",label:"Moisture-Wicking Clothes",emoji:"🏃",category:"base",suggestion:"Humidity is high — moisture-wicking fabrics will keep you fresher.",conditions:{humidity:{op:"gte",value:70},temp:{op:"gte",value:22}},priority:5},
-  {id:"t24",label:"Cold Rain Combo",emoji:"🌨️",category:"outerwear",suggestion:"Cold and wet — layer up with waterproof outer layers over warm clothes.",conditions:{temp:{op:"lt",value:10},rain:{op:"gte",level:"light"}},priority:10},
+  {id:"t20",label:"Sunglasses",emoji:"🕶️",category:"face",suggestion:"Bring sunglasses — it'll be bright and sunny.",conditions:{uvIndex:{op:"gte",value:4}},priority:5},
+  {id:"t21",label:"Sunscreen SPF 30+",emoji:"☀️",category:"face",suggestion:"Apply SPF 30+ sunscreen — UV index is elevated today.",conditions:{uvIndex:{op:"gte",value:6}},priority:8},
+  {id:"t22",label:"Sun Hat",emoji:"👒",category:"head",suggestion:"A wide-brimmed hat will shield you from strong UV today.",conditions:{uvIndex:{op:"gte",value:8}},priority:7},
+  {id:"t23",label:"Moisture-Wicking Clothes",emoji:"🏃",category:"base:top",suggestion:"Humidity is high — moisture-wicking fabrics will keep you fresher.",conditions:{humidity:{op:"gte",value:70},temp:{op:"gte",value:22}},priority:5},
+  {id:"t24",label:"Cold Rain Combo",emoji:"🌨️",category:"rain:wind",suggestion:"Cold and wet — layer up with waterproof outer layers over warm clothes.",conditions:{temp:{op:"lt",value:10},rain:{op:"gte",level:"light"}},priority:10},
   {id:"t26",label:"Wear Wool",emoji:"__wool__",category:"materials",suggestion:"Wool regulates body temperature naturally — great for cold or changeable weather. It also stays warm even when damp.",conditions:{temp:{op:"lt",value:12}},priority:7},
   {id:"t27",label:"Avoid Cotton Base Layer",emoji:"__wool__",category:"materials",suggestion:"Cotton holds moisture and loses insulation when wet. In cold or rainy conditions, swap cotton for wool or synthetics.",conditions:{temp:{op:"lt",value:10},rain:{op:"gte",level:"drizzle"}},priority:8},
-  {id:"t25",label:"Hot & Sunny — Reapply SPF",emoji:"🔥",category:"accessories",suggestion:"Hot AND high UV — reapply sunscreen every 2 hours if outdoors.",conditions:{temp:{op:"gt",value:28},uvIndex:{op:"gte",value:7}},priority:9},
+  {id:"t25",label:"Hot & Sunny — Reapply SPF",emoji:"🔥",category:"acc:other",suggestion:"Hot AND high UV — reapply sunscreen every 2 hours if outdoors.",conditions:{temp:{op:"gt",value:28},uvIndex:{op:"gte",value:7}},priority:9},
 
   // ── BOTTOMS ──
-  {id:"b01",label:"Insulated Trousers",emoji:"👖",category:"bottom",suggestion:"Heavy insulated trousers or thick thermal pants — regular jeans won't cut it in this cold.",conditions:{temp:{op:"lt",value:2}},priority:10},
-  {id:"b02",label:"Thermal Leggings Under Pants",emoji:"🩲",category:"bottom",suggestion:"Wear thermal leggings or long johns underneath your trousers for extra warmth.",conditions:{temp:{op:"range",min:2,max:8}},priority:8},
-  {id:"b03",label:"Thick Jeans or Chinos",emoji:"👖",category:"bottom",suggestion:"Thick jeans or chinos are a solid choice — avoid thin or ripped denim today.",conditions:{temp:{op:"range",min:8,max:15}},priority:6},
-  {id:"b04",label:"Regular Jeans or Trousers",emoji:"👖",category:"bottom",suggestion:"Regular jeans or trousers work great for today's temperature.",conditions:{temp:{op:"range",min:15,max:22}},priority:5},
-  {id:"b05",label:"Light Trousers or Chinos",emoji:"👖",category:"bottom",suggestion:"Light trousers, chinos, or a casual skirt will keep you comfortable.",conditions:{temp:{op:"range",min:22,max:28}},priority:5},
-  {id:"b06",label:"Shorts",emoji:"🩳",category:"bottom",suggestion:"Shorts are the move today — keep it light and breezy.",conditions:{temp:{op:"gt",value:28}},priority:7},
+  {id:"b01",label:"Insulated Trousers",emoji:"👖",category:"outer:bottom",suggestion:"Heavy insulated trousers or thick thermal pants — regular jeans won't cut it in this cold.",conditions:{temp:{op:"lt",value:2}},priority:10},
+  {id:"b02",label:"Thermal Leggings Under Pants",emoji:"🩲",category:"base:bottom",suggestion:"Wear thermal leggings or long johns underneath your trousers for extra warmth.",conditions:{temp:{op:"range",min:2,max:8}},priority:8},
+  {id:"b03",label:"Thick Jeans or Chinos",emoji:"👖",category:"mid:bottom",suggestion:"Thick jeans or chinos are a solid choice — avoid thin or ripped denim today.",conditions:{temp:{op:"range",min:8,max:15}},priority:6},
+  {id:"b04",label:"Regular Jeans or Trousers",emoji:"👖",category:"mid:bottom",suggestion:"Regular jeans or trousers work great for today's temperature.",conditions:{temp:{op:"range",min:15,max:22}},priority:5},
+  {id:"b05",label:"Light Trousers or Chinos",emoji:"👖",category:"mid:bottom",suggestion:"Light trousers, chinos, or a casual skirt will keep you comfortable.",conditions:{temp:{op:"range",min:22,max:28}},priority:5},
+  {id:"b06",label:"Shorts",emoji:"🩳",category:"mid:bottom",suggestion:"Shorts are the move today — keep it light and breezy.",conditions:{temp:{op:"gt",value:28}},priority:7},
 
   // ── TOPS ──
-  {id:"tp01",label:"Heavy Thermal Top",emoji:"👕",category:"top",suggestion:"A heavy thermal or merino wool top as your base — warmth starts here.",conditions:{temp:{op:"lt",value:5}},priority:9},
-  {id:"tp02",label:"Long-Sleeve Thermal Shirt",emoji:"👕",category:"top",suggestion:"A long-sleeve thermal shirt will keep your core warm.",conditions:{temp:{op:"range",min:5,max:12}},priority:8},
-  {id:"tp03",label:"Long-Sleeve Top",emoji:"👕",category:"top",suggestion:"A long-sleeve shirt or light knit top is ideal for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:6},
-  {id:"tp04",label:"T-Shirt",emoji:"👕",category:"top",suggestion:"A regular t-shirt is perfect — not too hot, not too cool.",conditions:{temp:{op:"range",min:18,max:26}},priority:5},
-  {id:"tp05",label:"Light or Sleeveless Top",emoji:"👕",category:"top",suggestion:"Go for a light, breathable, or sleeveless top — it's warm out.",conditions:{temp:{op:"gt",value:26}},priority:6},
+  {id:"tp01",label:"Heavy Thermal Top",emoji:"👕",category:"base:top",suggestion:"A heavy thermal or merino wool top as your base — warmth starts here.",conditions:{temp:{op:"lt",value:5}},priority:9},
+  {id:"tp02",label:"Long-Sleeve Thermal Shirt",emoji:"👕",category:"base:top",suggestion:"A long-sleeve thermal shirt will keep your core warm.",conditions:{temp:{op:"range",min:5,max:12}},priority:8},
+  {id:"tp03",label:"Long-Sleeve Top",emoji:"👕",category:"base:top",suggestion:"A long-sleeve shirt or light knit top is ideal for today.",conditions:{temp:{op:"range",min:12,max:18}},priority:6},
+  {id:"tp04",label:"T-Shirt",emoji:"👕",category:"base:top",suggestion:"A regular t-shirt is perfect — not too hot, not too cool.",conditions:{temp:{op:"range",min:18,max:26}},priority:5},
+  {id:"tp05",label:"Light or Sleeveless Top",emoji:"👕",category:"base:top",suggestion:"Go for a light, breathable, or sleeveless top — it's warm out.",conditions:{temp:{op:"gt",value:26}},priority:6},
 
   // ── SHOES ──
   {id:"s01",label:"Insulated Winter Boots",emoji:"🥾",category:"footwear",suggestion:"Insulated waterproof winter boots are essential — keep your feet warm and dry.",conditions:{temp:{op:"lt",value:2}},priority:10},
@@ -1116,8 +1134,19 @@ const DEFAULT_TIPS = [
 let tips = (() => {
   const saved = JSON.parse(localStorage.getItem('ww_tips') || 'null');
   if (!saved) return JSON.parse(JSON.stringify(DEFAULT_TIPS));
+  // Migrate tips saved under older category names
+  const OLD_CAT_MAP = { outerwear:'outer:top', midlayer:'mid:top', top:'base:top', bottom:'mid:bottom',
+    base:'base:bottom', 'acc:head':'head', 'acc:neck':'neck', 'acc:face':'face', 'acc:hand':'hand',
+    'acc:foot':'socks', accessories:'acc:other' };
+  const defById = Object.fromEntries(DEFAULT_TIPS.map(t => [t.id, t]));
+  saved.forEach(t => {
+    if (!CATEGORIES.includes(t.category)) {
+      t.category = defById[t.id] ? defById[t.id].category : (OLD_CAT_MAP[t.category] || 'acc:other');
+    }
+  });
   const savedIds = new Set(saved.map(t => t.id));
-  const newDefaults = DEFAULT_TIPS.filter(t => !savedIds.has(t.id));
+  const deletedIds = new Set(JSON.parse(localStorage.getItem('ww_deleted') || '[]'));
+  const newDefaults = DEFAULT_TIPS.filter(t => !savedIds.has(t.id) && !deletedIds.has(t.id));
   return newDefaults.length ? [...saved, ...newDefaults] : saved;
 })();
 let unit = localStorage.getItem('ww_unit') || 'C';
@@ -1320,8 +1349,7 @@ function getApplicableTips(weather) {
   });
 
   // Return in logical display order
-  const DISPLAY_ORDER = ["outerwear","midlayer","top","bottom","base","footwear",
-    "acc:head","acc:neck","acc:face","acc:foot","acc:hand","materials","style"];
+  const DISPLAY_ORDER = ["materials","rain:wind","outer:top","mid:top","base:top","outer:bottom","mid:bottom","base:bottom","socks","footwear","head","face","neck","hand","bag","acc:other","style"];
   const result = [];
   DISPLAY_ORDER.forEach(cat => {
     if (bycat[cat]) result.push(...bycat[cat]);
@@ -1466,8 +1494,10 @@ function renderHome() {
     list.innerHTML = `<div class="no-tips"><div class="no-tips-emoji">👕</div><div class="no-tips-text">Conditions look comfortable — dress as you normally would!</div></div>`;
   } else {
     // Split into main tips and acc subcategory tips, render separately with a header
-    const mainTips = sugg.filter(t => !ACC_SUBCATS.has(t.category));
+    const matTips  = sugg.filter(t => t.category === "materials");
+    const mainTips = sugg.filter(t => !ACC_SUBCATS.has(t.category) && t.category !== "materials" && t.category !== "style");
     const accTips  = sugg.filter(t =>  ACC_SUBCATS.has(t.category));
+    const extraTips = sugg.filter(t => t.category === "style");
 
     const renderTip = (t, delay, isAcc) => `
       <div class="tip-card${isAcc ? ' tip-card-acc' : ''}" style="animation-delay:${delay*0.05}s" onclick="toggleTipExpand(event,this)">
@@ -1482,12 +1512,14 @@ function renderHome() {
         </div>
       </div>`;
 
-    let html = mainTips.map((t, i) => renderTip(t, i, false)).join('');
-
+    let n = 0;
+    let html = matTips.map(t => renderTip(t, n++, false)).join('');
+    html += mainTips.map(t => renderTip(t, n++, false)).join('');
     if (accTips.length) {
       html += `<div class="group-header">👜 Accessories</div>`;
-      html += accTips.map((t, i) => renderTip(t, mainTips.length + i, true)).join('');
+      html += accTips.map(t => renderTip(t, n++, true)).join('');
     }
+    html += extraTips.map(t => renderTip(t, n++, false)).join('');
 
     list.innerHTML = html;
   }
@@ -1513,13 +1545,20 @@ function renderAdmin() {
 
   // Filter pills
   const pillsEl = document.getElementById('filter-pills');
-  const displayCats = ['all',...FILTER_CATS];
-  pillsEl.innerHTML = displayCats.map(cat=>`
-    <div class="pill${filterCat===cat?' active':''}" onclick="setFilter('${cat}')">${cat==='all'?'All':(CAT_LABELS[cat]||cat)}</div>
-  `).join('');
+  const rows = [
+    ['all', ...FILTER_ROW1],
+    FILTER_ROW2,
+    FILTER_ROW3,
+    FILTER_ROW4,
+  ];
+  pillsEl.innerHTML = rows.map(row =>
+    `<div class="filter-row">${row.map(cat =>
+      `<div class="pill${filterCat===cat?' active':''}" onclick="setFilter('${cat}')">${cat==='all'?'All':(CAT_LABELS[cat]||cat)}</div>`
+    ).join('')}</div>`
+  ).join('');
 
   // Tips list
-  const filtered = filterCat==='all' ? tips : tips.filter(t=> filterCat==='accessories' ? ACC_SUBCATS.has(t.category) : t.category===filterCat);
+  const filtered = filterCat==='all' ? tips : tips.filter(t => t.category===filterCat);
   document.getElementById('tips-list').innerHTML = filtered.map(tip=>`
     <div class="tip-row">
       <div class="tip-row-main" onclick="toggleExpand('${tip.id}')">
@@ -1912,7 +1951,12 @@ function duplicateTip(id) {
 function deleteTipById(id) {
   if (!confirm('Delete this tip?')) return;
   tips = tips.filter(t=>t.id!==id);
-  saveTips(); renderAdmin();
+  try {
+    const del = new Set(JSON.parse(localStorage.getItem('ww_deleted') || '[]'));
+    del.add(id);
+    localStorage.setItem('ww_deleted', JSON.stringify([...del]));
+  } catch(e) {}
+  saveTips(); renderAdmin(); renderHome();
 }
 function exportTips() {
   const blob = new Blob([JSON.stringify(tips, null, 2)], {type: 'application/json'});
@@ -1940,6 +1984,11 @@ function handleImport(e) {
       // Merge: imported tips override existing ones by id, new ones are appended
       const existingById = Object.fromEntries(tips.map(t => [t.id, t]));
       imported.forEach(t => { existingById[t.id] = t; });
+      try {
+        const del = new Set(JSON.parse(localStorage.getItem('ww_deleted') || '[]'));
+        imported.forEach(t => del.delete(t.id));
+        localStorage.setItem('ww_deleted', JSON.stringify([...del]));
+      } catch(e) {}
       tips = Object.values(existingById);
       saveTips();
       renderAdmin();
@@ -1955,6 +2004,7 @@ function handleImport(e) {
 function resetTips() {
   if (!confirm('Reset ALL tips to defaults? This cannot be undone.')) return;
   tips = JSON.parse(JSON.stringify(DEFAULT_TIPS));
+  localStorage.removeItem('ww_deleted');
   saveTips(); renderAdmin(); renderHome();
 }
 
@@ -2135,7 +2185,7 @@ function openModal(id, defaultCat) {
   document.getElementById('f-label').value      = tip?.label      || '';
   document.getElementById('f-suggestion').value = tip?.suggestion || '';
   document.getElementById('f-warning').checked = tip?.warning || false;
-  formCategory   = tip?.category  || (defaultCat && defaultCat !== 'all' ? defaultCat : 'base');
+  formCategory   = tip?.category  || (defaultCat && defaultCat !== 'all' ? defaultCat : 'base:top');
   formPriority   = tip?.priority  || 5;
   formRainLevel  = tip?.conditions?.rain?.level  || null;
   formWindLevel  = tip?.conditions?.wind?.level  || null;
