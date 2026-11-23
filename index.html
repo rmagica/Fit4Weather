@@ -1,5 +1,3 @@
-
-100%
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -889,7 +887,7 @@ const CAT_LABELS  = {
   "head":"Head", "face":"Face", "neck":"Neck", "hand":"Hand",
   "rain:wind":"Rain & Wind", "outer:top":"Outer Top", "mid:top":"Mid-layer Top", "base:top":"Base Top",
   "outer:bottom":"Outer Bottom", "mid:bottom":"Mid Bottom", "base:bottom":"Base Bottom",
-  "socks":"Socks", "footwear":"Footwear", "bag":"Bag / Backpack", "acc:other":"Other Acc.",
+  "socks":"Socks", "footwear":"Footwear", "bag":"Bag", "acc:other":"Other Acc.",
   "materials":"Materials", "style":"Style"
 };
 // Row layout for filter pills in admin (4 rows)
@@ -1264,8 +1262,8 @@ function aggregate(slots) {
   const maxWind = Math.max(...slots.map(w=>w.wind));
   const maxRain     = Math.max(...slots.map(w=>w.rain));
   const maxRainProb = Math.max(...slots.map(w=>w.rainProb ?? 0));
-  // Only treat as rain if both mm and probability suggest it — avoids trace amount false positives
-  const effectiveRainMm = (maxRainProb >= 20) ? maxRain : 0;
+  // Rain amount is judged on its own; rain chance % is a separate tip condition
+  const effectiveRainMm = maxRain;
   const minUV   = Math.min(...slots.map(w=>w.uv));
   const maxUV   = Math.max(...slots.map(w=>w.uv));
   return {
