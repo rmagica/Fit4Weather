@@ -754,7 +754,7 @@
         </div>
         <div class="cond-body" id="uv-cond-body" style="display:none">
           <div class="hint">Show tip when UV index is at least:</div>
-          <input class="input" id="uv-val" type="number" placeholder="e.g. 6" min="0" max="11">
+          <input class="input" id="f-uv-val" type="number" placeholder="e.g. 6" min="0" max="11">
         </div>
       </div>
 
@@ -2102,7 +2102,7 @@ function buildModal(tip) {
   const uvCond = tip?.conditions?.uvIndex;
   document.getElementById('uv-enabled').checked = !!uvCond;
   document.getElementById('uv-cond-body').style.display = uvCond ? 'block' : 'none';
-  document.getElementById('uv-val').value = uvCond?.value || '';
+  document.getElementById('f-uv-val').value = uvCond?.value || '';
 
   document.getElementById('temp-unit-lbl').textContent = `(${unitLabel()})`;
 }
@@ -2197,7 +2197,7 @@ function toggleHumCond() {
 function toggleUvCond() {
   const on = document.getElementById('uv-enabled').checked;
   document.getElementById('uv-cond-body').style.display = on ? 'block' : 'none';
-  if (on) { const el = document.getElementById('uv-val'); if (!el.value) el.value = 7; }
+  if (on) { const el = document.getElementById('f-uv-val'); if (!el.value) el.value = 7; }
 }
 function toggleRainProbCond() {
   const on = document.getElementById('rainprob-enabled').checked;
@@ -2268,7 +2268,7 @@ function saveTip() {
   }
   // UV
   if (document.getElementById('uv-enabled').checked) {
-    const v = parseFloat(document.getElementById('uv-val').value);
+    const v = parseFloat(document.getElementById('f-uv-val').value);
     if (!isNaN(v)) conditions.uvIndex = {op:'gte', value:v};
   }
 
